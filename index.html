@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Maze Trials</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <!-- Loading Screen -->
+      <div class="loading-screen">
+        <div class="loading-content">
+          <h1>INITIALIZING MAZE TRIAL</h1>
+          <div class="loading-bar-container">
+            <div class="loading-bar"></div>
+          </div>
+          <div class="loading-text">LOADING ENVIRONMENT...</div>
+          <div class="wckd-logo">W.C.K.D.</div>
+        </div>
+      </div>
+
+      <!-- Intro Screen -->
+      <div class="intro-screen">
+        <div class="intro-content">
+          <div class="glitch-effect" data-text="THE MAZE TRIALS">THE MAZE TRIALS</div>
+          <div class="wckd-subtitle">W.C.K.D. EXPERIMENT #437</div>
+          <div class="story-text">
+            <p class="typewriter">SUBJECT STATUS: INFECTED (42%)</p>
+            <p>You awaken in darkness, disoriented and alone. Your memory is fragmented.</p>
+            <p>You are a <span class="highlight">Runner</span> - one of the few who venture into the maze to map its ever-changing corridors.</p>
+            <p>The maze is changing faster than ever. <span class="danger-text">Grievers</span> have been spotted even during daylight hours.</p>
+            <p>Your body is fighting an unknown infection. Find the <span class="serum-text">blue serum vials</span> to slow its progress.</p>
+            <p class="warning-text">WARNING: The maze walls move at night. Find the exit before darkness falls completely.</p>
+          </div>
+          <div class="difficulty-selection">
+            <span>DIFFICULTY:</span>
+            <button class="difficulty-btn" data-difficulty="easy">GREENIE</button>
+            <button class="difficulty-btn active" data-difficulty="normal">RUNNER</button>
+            <button class="difficulty-btn" data-difficulty="hard">KEEPER</button>
+          </div>
+          <button id="start-game" class="pulse-btn">ENTER THE MAZE</button>
+        </div>
+      </div>
+
+      <!-- Game UI -->
+      <div class="game-ui">
+        <div class="top-left">
+          <div id="timer">Time: 05:00</div>
+          <div id="infection">Infection: 0%</div>
+          <div id="collected">Serum: 0/5</div>
+        </div>
+        <div class="top-right">
+          <div id="objective">Find the serum vials</div>
+        </div>
+        <div class="health-bar-container">
+          <div class="health-bar"></div>
+        </div>
+        <div class="crosshair">+</div>
+        <div class="stamina-bar-container">
+          <div class="stamina-bar"></div>
+        </div>
+      </div>
+
+      <!-- Game Over Screen -->
+      <div class="game-over">
+        <h2>Game Over</h2>
+        <p id="game-over-message">The infection has taken over your body.</p>
+        <button id="restart">Try Again</button>
+      </div>
+
+      <!-- Win Screen -->
+      <div class="win-screen">
+        <h2>You Escaped!</h2>
+        <p>You managed to escape the maze in <span id="final-time">0</span> with <span id="final-infection">0%</span> infection.</p>
+        <button id="play-again">Play Again</button>
+      </div>
+
+      <!-- Pause Menu -->
+      <div class="pause-menu">
+        <h2>Game Paused</h2>
+        <button id="resume">Resume</button>
+        <button id="restart-from-pause">Restart</button>
+        <div class="controls-info">
+          <h3>Controls</h3>
+          <p>WASD - Move</p>
+          <p>SHIFT - Sprint (uses stamina)</p>
+          <p>SPACE - Jump</p>
+          <p>E - Interact</p>
+          <p>F - Flashlight</p>
+          <p>ESC - Pause</p>
+        </div>
+      </div>
+
+      <!-- Interaction Prompt -->
+      <div class="interaction-prompt">
+        Press E to interact
+      </div>
+
+      <!-- Story Notes -->
+      <div class="story-note">
+        <div class="note-content">
+          <h3>Note Title</h3>
+          <p>Note content goes here...</p>
+          <button class="close-note">Close</button>
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        Use WASD to move | SHIFT to sprint | Mouse to look | Find the serum vials!
+      </div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

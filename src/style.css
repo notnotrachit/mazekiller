@@ -1,0 +1,720 @@
+:root {
+  --primary-color: #00b3e6;
+  --secondary-color: #42b883;
+  --danger-color: #e63946;
+  --warning-color: #ffb703;
+  --dark-bg: #121212;
+  --darker-bg: #080808;
+  --lighter-bg: #1f1f1f;
+  --text-color: #e0e0e0;
+  --text-secondary: #aaaaaa;
+  --wckd-blue: #058ED9;
+  --font-main: 'Orbitron', sans-serif;
+  --font-secondary: 'Source Code Pro', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  overflow: hidden;
+  font-family: var(--font-main);
+  background-color: var(--dark-bg);
+  color: var(--text-color);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Loading Screen */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--darker-bg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.loading-content {
+  width: 80%;
+  max-width: 600px;
+  text-align: center;
+}
+
+.loading-content h1 {
+  font-size: 32px;
+  margin-bottom: 30px;
+  letter-spacing: 2px;
+  color: var(--wckd-blue);
+}
+
+.loading-bar-container {
+  width: 100%;
+  height: 24px;
+  background-color: var(--lighter-bg);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 179, 230, 0.3);
+}
+
+.loading-bar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  transition: width 0.3s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.2) 50%, 
+    rgba(255, 255, 255, 0) 100%);
+  animation: loading-shimmer 1.5s infinite;
+}
+
+.loading-text {
+  margin-top: 20px;
+  font-family: var(--font-secondary);
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  font-size: 14px;
+}
+
+.wckd-logo {
+  margin-top: 50px;
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: var(--wckd-blue);
+  opacity: 0.8;
+}
+
+/* Intro Screen */
+.intro-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(8, 8, 8, 0.9);
+  z-index: 900;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.intro-content {
+  width: 80%;
+  max-width: 800px;
+  background-color: rgba(18, 18, 18, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 30px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.glitch-effect {
+  font-size: 48px;
+  font-weight: bold;
+  color: var(--primary-color);
+  text-align: center;
+  margin-bottom: 10px;
+  position: relative;
+  text-shadow: 0 0 15px rgba(0, 179, 230, 0.7);
+}
+
+.glitch-effect::before,
+.glitch-effect::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+}
+
+.glitch-effect::before {
+  animation: glitch-anim-1 2s infinite linear alternate-reverse;
+  clip: rect(44px, 450px, 56px, 0);
+  text-shadow: -2px 0 var(--danger-color);
+}
+
+.glitch-effect::after {
+  animation: glitch-anim-2 3s infinite linear alternate-reverse;
+  clip: rect(24px, 450px, 90px, 0);
+  text-shadow: 2px 0 var(--warning-color);
+}
+
+.wckd-subtitle {
+  text-align: center;
+  font-size: 16px;
+  color: var(--wckd-blue);
+  letter-spacing: 2px;
+  margin-bottom: 30px;
+}
+
+.story-text {
+  margin-bottom: 30px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-color);
+  font-family: var(--font-secondary);
+}
+
+.story-text p {
+  margin-bottom: 16px;
+}
+
+.highlight {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.danger-text {
+  color: var(--danger-color);
+  font-weight: bold;
+}
+
+.serum-text {
+  color: var(--wckd-blue);
+  font-weight: bold;
+}
+
+.warning-text {
+  color: var(--warning-color);
+  font-weight: bold;
+}
+
+.typewriter {
+  overflow: hidden;
+  border-right: 2px solid var(--primary-color);
+  white-space: nowrap;
+  margin: 0 auto;
+  letter-spacing: 3px;
+  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.difficulty-selection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 15px;
+}
+
+.difficulty-btn {
+  background-color: var(--lighter-bg);
+  color: var(--text-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 8px 15px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  transition: all 0.2s ease;
+}
+
+.difficulty-btn:hover {
+  background-color: rgba(0, 179, 230, 0.2);
+}
+
+.difficulty-btn.active {
+  background-color: var(--primary-color);
+  color: var(--darker-bg);
+}
+
+.pulse-btn {
+  background-color: var(--primary-color);
+  color: var(--darker-bg);
+  font-weight: bold;
+  font-size: 20px;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+  font-family: var(--font-main);
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  animation: pulse 2s infinite;
+}
+
+.pulse-btn:hover {
+  background-color: var(--wckd-blue);
+  animation: none;
+  transform: scale(1.05);
+}
+
+/* Game UI */
+.game-ui {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.top-left {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: rgba(8, 8, 8, 0.7);
+  padding: 10px 15px;
+  border-radius: 5px;
+  border-left: 3px solid var(--primary-color);
+}
+
+.top-left div {
+  margin: 5px 0;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+}
+
+.top-right {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(8, 8, 8, 0.7);
+  padding: 10px 15px;
+  border-radius: 5px;
+  border-right: 3px solid var(--warning-color);
+}
+
+#objective {
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  color: var(--warning-color);
+}
+
+.health-bar-container {
+  position: absolute;
+  bottom: 30px;
+  left: 20px;
+  width: 200px;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.health-bar {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #ff3300, #ff6600);
+  transition: width 0.3s ease-out;
+}
+
+.stamina-bar-container {
+  position: absolute;
+  bottom: 45px;
+  left: 20px;
+  width: 200px;
+  height: 5px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.stamina-bar {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #3399ff, #66ccff);
+  transition: width 0.2s ease-out;
+}
+
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 24px;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Game Over Screen */
+.game-over, .win-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 500;
+}
+
+.game-over h2, .win-screen h2 {
+  font-size: 48px;
+  margin-bottom: 20px;
+  color: var(--danger-color);
+}
+
+.win-screen h2 {
+  color: var(--secondary-color);
+}
+
+.game-over p, .win-screen p {
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+#restart, #play-again {
+  padding: 12px 24px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#restart:hover, #play-again:hover {
+  background-color: var(--wckd-blue);
+}
+
+/* Pause Menu */
+.pause-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 400;
+}
+
+.pause-menu h2 {
+  font-size: 36px;
+  margin-bottom: 30px;
+  color: var(--primary-color);
+}
+
+.pause-menu button {
+  width: 200px;
+  padding: 12px 0;
+  margin: 10px 0;
+  background-color: var(--lighter-bg);
+  color: var(--text-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.pause-menu button:hover {
+  background-color: rgba(0, 179, 230, 0.2);
+}
+
+.controls-info {
+  margin-top: 30px;
+  background-color: rgba(31, 31, 31, 0.7);
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.controls-info h3 {
+  margin-bottom: 15px;
+  color: var(--warning-color);
+}
+
+.controls-info p {
+  margin: 8px 0;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+}
+
+/* Interaction Prompt */
+.interaction-prompt {
+  position: fixed;
+  bottom: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: var(--text-color);
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 16px;
+  display: none;
+  z-index: 300;
+}
+
+/* Story Note */
+.story-note {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 600;
+}
+
+.note-content {
+  width: 90%;
+  max-width: 600px;
+  background-color: #f5f5dc;
+  color: #333;
+  padding: 30px;
+  border-radius: 5px;
+  font-family: 'Courier New', monospace;
+  transform: rotate(-1deg);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+  position: relative;
+}
+
+.note-content h3 {
+  font-size: 24px;
+  margin-bottom: 15px;
+  color: #333;
+  font-family: var(--font-secondary);
+}
+
+.note-content p {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.close-note {
+  background-color: #333;
+  color: #f5f5dc;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+}
+
+.close-note:hover {
+  background-color: #555;
+}
+
+/* Instructions */
+.instructions {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: var(--text-color);
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 200;
+  white-space: nowrap;
+  font-family: var(--font-secondary);
+}
+
+/* Animations */
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: var(--primary-color) }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 179, 230, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 179, 230, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 179, 230, 0);
+  }
+}
+
+@keyframes loading-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes glitch-anim-1 {
+  0% { clip: rect(30px, 9999px, 10px, 0); }
+  10% { clip: rect(43px, 9999px, 43px, 0); }
+  20% { clip: rect(12px, 9999px, 26px, 0); }
+  30% { clip: rect(25px, 9999px, 23px, 0); }
+  40% { clip: rect(76px, 9999px, 6px, 0); }
+  50% { clip: rect(46px, 9999px, 98px, 0); }
+  60% { clip: rect(60px, 9999px, 18px, 0); }
+  70% { clip: rect(15px, 9999px, 72px, 0); }
+  80% { clip: rect(20px, 9999px, 73px, 0); }
+  90% { clip: rect(25px, 9999px, 55px, 0); }
+  100% { clip: rect(44px, 9999px, 46px, 0); }
+}
+
+@keyframes glitch-anim-2 {
+  0% { clip: rect(12px, 9999px, 82px, 0); }
+  10% { clip: rect(26px, 9999px, 56px, 0); }
+  20% { clip: rect(13px, 9999px, 76px, 0); }
+  30% { clip: rect(36px, 9999px, 93px, 0); }
+  40% { clip: rect(8px, 9999px, 16px, 0); }
+  50% { clip: rect(50px, 9999px, 78px, 0); }
+  60% { clip: rect(42px, 9999px, 12px, 0); }
+  70% { clip: rect(65px, 9999px, 23px, 0); }
+  80% { clip: rect(30px, 9999px, 66px, 0); }
+  90% { clip: rect(13px, 9999px, 55px, 0); }
+  100% { clip: rect(54px, 9999px, 36px, 0); }
+}
+
+/* Flashlight Overlay */
+.flashlight-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at 50% 50%, 
+    transparent 100px, 
+    rgba(0, 0, 0, 0.95) 300px
+  );
+  pointer-events: none;
+  z-index: 150;
+  display: none;
+}
+
+/* Vignette Overlay for Darkness */
+.vignette-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* Infection Overlay - Red pulsing when infection is high */
+.infection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(230, 57, 70, 0);
+  pointer-events: none;
+  z-index: 140;
+  transition: background-color 0.5s ease;
+}
+
+/* Time Warning Overlay - Yellow pulse when time is running out */
+.time-warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 183, 3, 0);
+  pointer-events: none;
+  z-index: 130;
+}
+
+/* Heartbeat animation for infection overlay */
+@keyframes heartbeat {
+  0% { opacity: 0; }
+  25% { opacity: 0.3; }
+  50% { opacity: 0; }
+  75% { opacity: 0.3; }
+  100% { opacity: 0; }
+}
+
+/* Flash animation for time warning */
+@keyframes timeWarning {
+  0% { opacity: 0; }
+  50% { opacity: 0.2; }
+  100% { opacity: 0; }
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .glitch-effect {
+    font-size: 32px;
+  }
+  
+  .story-text {
+    font-size: 14px;
+  }
+  
+  .difficulty-selection {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .pulse-btn {
+    font-size: 16px;
+    padding: 12px 24px;
+  }
+}
+
+/* For wider screens */
+@media (min-width: 1200px) {
+  .intro-content {
+    max-width: 1000px;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  .top-left, .top-right {
+    padding: 5px 10px;
+  }
+  
+  .top-left div, .top-right div {
+    font-size: 12px;
+  }
+  
+  .health-bar-container, .stamina-bar-container {
+    width: 150px;
+  }
+  
+  .instructions {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
