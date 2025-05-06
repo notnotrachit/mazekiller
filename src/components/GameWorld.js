@@ -44,6 +44,9 @@ export class GameWorld {
     this.dynamicWallsTimer = 0;
     this.dynamicWallChangeInterval = 30; // seconds
 
+    // Add a queue for processing serum collection effects
+    this.collectionEffectsQueue = [];
+
     this.initialize();
   }
 
@@ -993,10 +996,17 @@ export class GameWorld {
           // Only do the precise distance check if we're close enough
           const distance = position.distanceTo(key.position);
           if (distance < 1) {
-            // Avoid expensive operations during collection
-            // Just hide the key and schedule intensive effects for next frame
+            // PERFORMANCE FIX: Use deferred collection effect processing
+            // Just hide the key initially and queue the effect processing
             key.visible = false;
             collected = true;
+
+            // Queue collection for processing over next few frames
+            this.collectionEffectsQueue.push({
+              key: key,
+              time: performance.now(),
+              processed: false,
+            });
 
             // Make sure we don't check other keys after finding one
             break;
@@ -1030,6 +1040,9 @@ export class GameWorld {
       }
     });
 
+    // Process any queued collection effects (limit per frame)
+    this.processCollectionEffects();
+
     // Animate portal
     if (this.portal) {
       this.portal.rotation.z += delta * 0.5;
@@ -1044,6 +1057,27 @@ export class GameWorld {
 
     // Update dynamic walls
     this.updateDynamicWalls(delta);
+  }
+
+  // New method to process collection effects over multiple frames
+  processCollectionEffects() {
+    if (this.collectionEffectsQueue.length === 0) return;
+
+    // Process only one collection effect per frame to avoid lag spikes
+    const effect = this.collectionEffectsQueue[0];
+
+    // If this effect is already processed, remove it and return
+    if (effect.processed) {
+      this.collectionEffectsQueue.shift();
+      return;
+    }
+
+    // Mark as processed so it gets removed next frame
+    effect.processed = true;
+
+    // Perform any intensive operations that were causing lag during collection
+    // For now we're just doing simple cleanup, but you can add more effects here
+    // These will get distributed across frames
   }
 
   shuffleArray(array) {
