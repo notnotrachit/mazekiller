@@ -514,7 +514,15 @@ player.addEventListener("lock", function () {
 });
 
 player.addEventListener("unlock", function () {
-  if (gameState.gameStarted && !gameState.gameOver) {
+  // Check if this is a special interaction unlock
+  if (player._isInteractionUnlock) {
+    // Reset the flag and don't show pause menu
+    player._isInteractionUnlock = false;
+    return;
+  }
+  
+  // Regular unlock behavior - show pause menu if game is active
+  if (gameState.gameStarted && !gameState.gameOver && !gameState.noteReading) {
     showPauseMenu();
   }
 });
@@ -793,8 +801,14 @@ function checkInteractions() {
 }
 
 function showStoryNote(note) {
-  gameState.gamePaused = true;
-  player.unlock();
+  // Set a specific flag for story notes rather than using the general pause flag
+  gameState.noteReading = true;
+  
+  // Don't set gamePaused to avoid triggering the pause menu
+  // gameState.gamePaused = true;
+  
+  // Unlock controls but use a special method that won't trigger the pause menu
+  player.unlock(true); // Pass 'true' to indicate this is a special interaction unlock
 
   noteTitle.textContent = note.title;
   noteContent.textContent = note.content;
@@ -803,8 +817,9 @@ function showStoryNote(note) {
 
 function hideStoryNote() {
   storyNotePanel.style.display = "none";
+  gameState.noteReading = false; // Clear the special flag
+  gameState.gamePaused = false;  // Ensure game is not paused
   player.lock();
-  gameState.gamePaused = false;
 }
 
 function formatTime(seconds) {
@@ -945,7 +960,15 @@ function initializeGame() {
     });
 
     player.addEventListener("unlock", function () {
-      if (gameState.gameStarted && !gameState.gameOver) {
+      // Check if this is a special interaction unlock
+      if (player._isInteractionUnlock) {
+        // Reset the flag and don't show pause menu
+        player._isInteractionUnlock = false;
+        return;
+      }
+      
+      // Regular unlock behavior - show pause menu if game is active
+      if (gameState.gameStarted && !gameState.gameOver && !gameState.noteReading) {
         showPauseMenu();
       }
     });

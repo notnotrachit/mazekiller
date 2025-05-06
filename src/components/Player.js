@@ -523,11 +523,16 @@ export class Player {
     }
   }
 
-  unlock() {
+  unlock(isInteraction = false) {
     if (this.controls.isLocked) {
-      console.log("[DEBUG] Releasing pointer lock");
+      console.log("[DEBUG] Releasing pointer lock" + (isInteraction ? " for interaction" : ""));
       try {
         this.controls.unlock();
+        
+        // Set custom attribute to prevent triggering pause menu on unlock events
+        if (isInteraction) {
+          this._isInteractionUnlock = true;
+        }
       } catch (error) {
         console.error("[DEBUG] Error unlocking controls:", error);
       }

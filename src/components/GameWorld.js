@@ -850,9 +850,10 @@ export class GameWorld {
   }
 
   checkWallCollision(position) {
-    const playerRadius = 0.4; // Reduced from 0.5 for less restrictive collisions
-    const collisionTolerance = 0.1; // Added tolerance for smoother movement
+    const playerRadius = 0.5; // Restored to original value for consistent collisions
+    const collisionTolerance = 0.05; // Reduced tolerance for more accurate collisions
 
+    // First check for collisions with the maze grid walls
     // Convert world position to maze grid coordinates
     const gridX = Math.floor(
       (position.x + (this.mazeSize * this.cellSize) / 2) / this.cellSize
@@ -861,11 +862,7 @@ export class GameWorld {
       (position.z + (this.mazeSize * this.cellSize) / 2) / this.cellSize
     );
 
-    // Skip excessive debug logging that causes lag
-    // console.log("[DEBUG] Collision check - Position:", position);
-    // console.log("[DEBUG] Grid coordinates - X:", gridX, "Z:", gridZ);
-
-    // Optimize collision checking to only check nearby cells
+    // Check nearby grid cells
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
         const checkX = gridX + i;
@@ -881,7 +878,7 @@ export class GameWorld {
           continue;
         }
 
-        // If there's a wall, check collision
+        // If there's a wall in the grid, check collision
         if (this.maze[checkZ][checkX] === 1) {
           const wallX = (checkX - this.mazeSize / 2) * this.cellSize;
           const wallZ = (checkZ - this.mazeSize / 2) * this.cellSize;
@@ -890,25 +887,39 @@ export class GameWorld {
           const dx = position.x - wallX;
           const dz = position.z - wallZ;
 
-          // Skip excessive debug logging
-          // console.log("[DEBUG] Wall found - Wall position:", {
-          //   x: wallX,
-          //   z: wallZ,
-          // });
-          // console.log("[DEBUG] Distance to wall - dx:", dx, "dz:", dz);
-
           // Check if player is colliding with wall (with tolerance)
-          // Use a faster collision check by avoiding square root operations
           const collisionThreshold =
             this.cellSize / 2 + playerRadius - collisionTolerance;
           if (
             Math.abs(dx) < collisionThreshold &&
             Math.abs(dz) < collisionThreshold
           ) {
-            // console.log("[DEBUG] Collision detected!");
             return true;
           }
         }
+      }
+    }
+
+    // Next, check for collisions with dynamic walls directly using their current positions
+    // This handles the case where dynamic walls have moved from their grid positions
+    for (let i = 0; i < this.walls.children.length; i++) {
+      const wall = this.walls.children[i];
+
+      // Skip walls that aren't dynamic (optimization)
+      if (!wall.userData.isDynamic) continue;
+
+      // Calculate distance from player to current wall position
+      const dx = position.x - wall.position.x;
+      const dz = position.z - wall.position.z;
+
+      // Check if player is colliding with this dynamic wall
+      const collisionThreshold =
+        this.cellSize / 2 + playerRadius - collisionTolerance;
+      if (
+        Math.abs(dx) < collisionThreshold &&
+        Math.abs(dz) < collisionThreshold
+      ) {
+        return true;
       }
     }
 
