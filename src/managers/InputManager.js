@@ -7,7 +7,12 @@ export class InputManager {
     this.callbacks = {
       onEscape: callbacks.onEscape || (() => {}),
       onInteract: callbacks.onInteract || (() => {}),
+      onToggleMinimap: callbacks.onToggleMinimap || (() => {}),
     };
+
+    // Cheat code sequence tracking
+    this.lastKeysPressed = [];
+    this.cheatCodeSequence = ["KeyM", "KeyA", "KeyP"];
 
     // Initialize event listeners
     this.setupEventListeners();
@@ -49,5 +54,42 @@ export class InputManager {
     if (event.code === "KeyE") {
       this.callbacks.onInteract();
     }
+
+    // Track keys for cheat code
+    this.trackCheatCode(event.code);
+  }
+
+  // Track key presses to detect cheat code sequence
+  trackCheatCode(keyCode) {
+    // Add the key to the sequence
+    this.lastKeysPressed.push(keyCode);
+
+    // Only keep the most recent n keys where n is the length of the cheat code
+    if (this.lastKeysPressed.length > this.cheatCodeSequence.length) {
+      this.lastKeysPressed.shift();
+    }
+
+    // Check if the sequence matches the cheat code
+    if (this.isCheatCodeActivated()) {
+      console.log("Cheat code activated: Mini-map toggled");
+      this.callbacks.onToggleMinimap();
+      // Reset the sequence after successful activation
+      this.lastKeysPressed = [];
+    }
+  }
+
+  // Check if the cheat code has been entered
+  isCheatCodeActivated() {
+    if (this.lastKeysPressed.length !== this.cheatCodeSequence.length) {
+      return false;
+    }
+
+    for (let i = 0; i < this.cheatCodeSequence.length; i++) {
+      if (this.lastKeysPressed[i] !== this.cheatCodeSequence[i]) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

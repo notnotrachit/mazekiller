@@ -345,4 +345,11 @@ export class Collectibles {
       }
     });
   }
+
+  // Get positions of uncollected notes for minimap
+  getNotePositions() {
+    return this.storyNotes
+      .filter((note) => !note.collected)
+      .map((note) => note.position);
+  }
 }

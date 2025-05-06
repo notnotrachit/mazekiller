@@ -902,10 +902,30 @@ export class GameWorld {
   }
 
   checkWallCollision(position) {
-    const playerRadius = 0.5; // Restored to original value for consistent collisions
-    const collisionTolerance = 0.05; // Reduced tolerance for more accurate collisions
+    const playerRadius = 0.5;
+    const collisionTolerance = 0.05;
 
-    // First check for collisions with the maze grid walls
+    // FIRST PASS: Direct collision check with all wall meshes
+    // This is more accurate than grid-based checks, especially with dynamic walls
+    for (let i = 0; i < this.walls.children.length; i++) {
+      const wall = this.walls.children[i];
+
+      // Skip walls that are far away using a rough bounding check
+      const dx = Math.abs(position.x - wall.position.x);
+      const dz = Math.abs(position.z - wall.position.z);
+
+      if (dx > this.cellSize || dz > this.cellSize) continue;
+
+      // More precise collision check
+      const collisionThreshold =
+        this.cellSize / 2 + playerRadius - collisionTolerance;
+      if (dx < collisionThreshold && dz < collisionThreshold) {
+        return true;
+      }
+    }
+
+    // SECOND PASS: Grid-based collision check (kept as fallback)
+    // This can catch any walls that might have been missed in the direct check
     // Convert world position to maze grid coordinates
     const gridX = Math.floor(
       (position.x + (this.mazeSize * this.cellSize) / 2) / this.cellSize
@@ -914,64 +934,47 @@ export class GameWorld {
       (position.z + (this.mazeSize * this.cellSize) / 2) / this.cellSize
     );
 
-    // Check nearby grid cells
-    for (let i = -1; i <= 1; i++) {
-      for (let j = -1; j <= 1; j++) {
-        const checkX = gridX + i;
-        const checkZ = gridZ + j;
+    // Only check immediate neighboring cells (not diagonal)
+    const neighbors = [
+      { x: 0, z: 0 }, // Current cell
+      { x: 1, z: 0 }, // Right
+      { x: -1, z: 0 }, // Left
+      { x: 0, z: 1 }, // Down
+      { x: 0, z: -1 }, // Up
+    ];
 
-        // Skip if out of bounds
-        if (
-          checkX < 0 ||
-          checkX >= this.mazeSize ||
-          checkZ < 0 ||
-          checkZ >= this.mazeSize
-        ) {
-          continue;
-        }
+    for (const offset of neighbors) {
+      const checkX = gridX + offset.x;
+      const checkZ = gridZ + offset.z;
 
-        // If there's a wall in the grid, check collision
-        if (this.maze[checkZ][checkX] === 1) {
-          const wallX = (checkX - this.mazeSize / 2) * this.cellSize;
-          const wallZ = (checkZ - this.mazeSize / 2) * this.cellSize;
-
-          // Calculate distance from player to wall center
-          const dx = position.x - wallX;
-          const dz = position.z - wallZ;
-
-          // Check if player is colliding with wall (with tolerance)
-          const collisionThreshold =
-            this.cellSize / 2 + playerRadius - collisionTolerance;
-          if (
-            Math.abs(dx) < collisionThreshold &&
-            Math.abs(dz) < collisionThreshold
-          ) {
-            return true;
-          }
-        }
-      }
-    }
-
-    // Next, check for collisions with dynamic walls directly using their current positions
-    // This handles the case where dynamic walls have moved from their grid positions
-    for (let i = 0; i < this.walls.children.length; i++) {
-      const wall = this.walls.children[i];
-
-      // Skip walls that aren't dynamic (optimization)
-      if (!wall.userData.isDynamic) continue;
-
-      // Calculate distance from player to current wall position
-      const dx = position.x - wall.position.x;
-      const dz = position.z - wall.position.z;
-
-      // Check if player is colliding with this dynamic wall
-      const collisionThreshold =
-        this.cellSize / 2 + playerRadius - collisionTolerance;
+      // Skip if out of bounds
       if (
-        Math.abs(dx) < collisionThreshold &&
-        Math.abs(dz) < collisionThreshold
+        checkX < 0 ||
+        checkX >= this.mazeSize ||
+        checkZ < 0 ||
+        checkZ >= this.mazeSize
       ) {
-        return true;
+        continue;
+      }
+
+      // If there's a wall in the grid, check collision
+      if (this.maze[checkZ][checkX] === 1) {
+        const wallX = (checkX - this.mazeSize / 2) * this.cellSize;
+        const wallZ = (checkZ - this.mazeSize / 2) * this.cellSize;
+
+        // Calculate distance from player to wall center
+        const dx = position.x - wallX;
+        const dz = position.z - wallZ;
+
+        // Check if player is colliding with wall
+        const collisionThreshold =
+          this.cellSize / 2 + playerRadius - collisionTolerance;
+        if (
+          Math.abs(dx) < collisionThreshold &&
+          Math.abs(dz) < collisionThreshold
+        ) {
+          return true;
+        }
       }
     }
 
@@ -1198,5 +1201,26 @@ export class GameWorld {
       [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
+  }
+
+  // Methods for minimap positions
+  getKeyPositions() {
+    // Return all non-collected serum vial positions
+    return this.keys
+      .filter((key) => !key.userData.collected)
+      .map((key) => key.position);
+  }
+
+  getExitPosition() {
+    // Return the exit portal position
+    if (this.portalGroup) {
+      return this.portalGroup.position;
+    }
+    // Fallback to the expected position in case portal isn't initialized yet
+    return new THREE.Vector3(
+      (this.mazeSize - 2 - this.mazeSize / 2) * this.cellSize,
+      1.5,
+      (this.mazeSize - 2 - this.mazeSize / 2) * this.cellSize
+    );
   }
 }

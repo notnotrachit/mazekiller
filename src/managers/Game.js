@@ -13,6 +13,7 @@ import { Collectibles } from "../components/Collectibles.js";
 import { Griever } from "../components/Griever.js";
 import { EntityManager } from "./EntityManager.js";
 import { Utils } from "../components/utils/Utils.js";
+import { Minimap } from "../components/ui/Minimap.js";
 
 export class Game {
   constructor() {
@@ -42,6 +43,9 @@ export class Game {
       console.log("Loading timeout reached, dismissing loading screen anyway");
       this.ui.dismissLoadingScreen();
     }, 5000);
+
+    // Minimap
+    this.minimapEnabled = false;
   }
 
   // Initialize the game and all components
@@ -52,6 +56,9 @@ export class Game {
 
     // Initialize UI
     this.ui = new UIManager(this.gameState);
+
+    // Initialize minimap
+    this.minimap = new Minimap();
 
     // Initialize sound
     try {
@@ -105,6 +112,7 @@ export class Game {
     this.inputManager = new InputManager(this.renderer.getCanvas(), {
       onEscape: () => this.handleEscapeKey(),
       onInteract: () => this.checkInteractions(),
+      onToggleMinimap: () => this.toggleMinimap(),
     });
 
     // Start animation loop
@@ -122,6 +130,69 @@ export class Game {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.handleResize();
+  }
+
+  // Toggle minimap display (cheat code)
+  toggleMinimap() {
+    this.minimapEnabled = !this.minimapEnabled;
+    this.minimap.toggle();
+
+    // Show cheat activated notification
+    this.showCheatNotification(
+      "Minimap " + (this.minimapEnabled ? "Activated" : "Deactivated")
+    );
+  }
+
+  // Display a notification when a cheat is activated
+  showCheatNotification(message) {
+    // Create notification element
+    const notification = document.createElement("div");
+    notification.className = "cheat-notification";
+    notification.textContent = message;
+
+    // Add to DOM
+    document.body.appendChild(notification);
+
+    // Remove after animation completes
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 2000);
+  }
+
+  // Update minimap with current game state
+  updateMinimap() {
+    if (!this.minimapEnabled || !this.minimap) return;
+
+    // Get player position and look direction
+    const playerPosition = this.player.getPosition();
+    const playerDirection = this.player.getDirection();
+
+    // Get griever positions
+    const grievers = this.entityManager
+      .getGrievers()
+      .map((griever) => griever.position);
+
+    // Get serum positions
+    const serums = this.gameWorld.getKeyPositions();
+
+    // Get note positions
+    const notes = this.collectibles.getNotePositions();
+
+    // Get exit position
+    const exit = this.gameWorld.getExitPosition();
+
+    // Compile all entity data
+    const entities = {
+      player: playerPosition,
+      playerDirection: playerDirection,
+      grievers: grievers,
+      serums: serums,
+      notes: notes,
+      exit: exit,
+    };
+
+    // Render the minimap
+    this.minimap.render(this.gameWorld.maze, entities);
   }
 
   // Setup loading manager
@@ -447,6 +518,9 @@ export class Game {
     // Calculate delta time in seconds, capped at 100ms to prevent huge jumps
     const delta = Math.min(elapsed / 1000, 0.1);
     this.lastTime = now;
+
+    // Update minimap with current game state if enabled
+    this.updateMinimap();
 
     // Always render even if game hasn't started to prevent black screen
     if (this.gameState.gameStarted) {

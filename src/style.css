@@ -567,6 +567,89 @@ canvas {
   font-family: var(--font-secondary);
 }
 
+/* Minimap */
+.minimap-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 2px solid var(--primary-color);
+  border-radius: 5px;
+  padding: 10px;
+  z-index: 400;
+  display: none; /* Hidden by default, will be toggled by cheat code */
+  box-shadow: 0 0 15px rgba(0, 179, 230, 0.5);
+}
+
+.minimap-canvas {
+  display: block;
+  width: 200px;
+  height: 200px;
+  border-radius: 3px;
+}
+
+.minimap-legend {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-secondary);
+  font-size: 10px;
+  color: var(--text-color);
+}
+
+.minimap-legend div {
+  display: flex;
+  align-items: center;
+  margin-right: 5px;
+}
+
+.minimap-legend span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-radius: 50%;
+}
+
+.legend-player {
+  background-color: #FFFFFF; /* White */
+}
+
+.legend-griever {
+  background-color: #F44336; /* Red */
+}
+
+.legend-serum {
+  background-color: #2196F3; /* Blue */
+}
+
+.legend-note {
+  background-color: #FFC107; /* Amber */
+}
+
+.legend-exit {
+  background-color: #4CAF50; /* Green */
+}
+
+/* Cheat code activated notification */
+.cheat-notification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: var(--primary-color);
+  padding: 15px 30px;
+  border-radius: 5px;
+  font-family: var(--font-secondary);
+  font-size: 18px;
+  z-index: 1200;
+  animation: fadeInOut 2s forwards;
+  text-align: center;
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 0 20px rgba(0, 179, 230, 0.7);
+}
+
 /* Animation keyframes for various effects */
 @keyframes typing {
   from { width: 0 }
@@ -724,6 +807,13 @@ canvas {
   0% { opacity: 1; }
   50% { opacity: 0.5; }
   100% { opacity: 1; }
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* Media Queries */
