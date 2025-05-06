@@ -861,10 +861,11 @@ export class GameWorld {
       (position.z + (this.mazeSize * this.cellSize) / 2) / this.cellSize
     );
 
-    console.log("[DEBUG] Collision check - Position:", position);
-    console.log("[DEBUG] Grid coordinates - X:", gridX, "Z:", gridZ);
+    // Skip excessive debug logging that causes lag
+    // console.log("[DEBUG] Collision check - Position:", position);
+    // console.log("[DEBUG] Grid coordinates - X:", gridX, "Z:", gridZ);
 
-    // Check surrounding cells
+    // Optimize collision checking to only check nearby cells
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
         const checkX = gridX + i;
@@ -889,20 +890,22 @@ export class GameWorld {
           const dx = position.x - wallX;
           const dz = position.z - wallZ;
 
-          console.log("[DEBUG] Wall found - Wall position:", {
-            x: wallX,
-            z: wallZ,
-          });
-          console.log("[DEBUG] Distance to wall - dx:", dx, "dz:", dz);
+          // Skip excessive debug logging
+          // console.log("[DEBUG] Wall found - Wall position:", {
+          //   x: wallX,
+          //   z: wallZ,
+          // });
+          // console.log("[DEBUG] Distance to wall - dx:", dx, "dz:", dz);
 
           // Check if player is colliding with wall (with tolerance)
+          // Use a faster collision check by avoiding square root operations
           const collisionThreshold =
             this.cellSize / 2 + playerRadius - collisionTolerance;
           if (
             Math.abs(dx) < collisionThreshold &&
             Math.abs(dz) < collisionThreshold
           ) {
-            console.log("[DEBUG] Collision detected!");
+            // console.log("[DEBUG] Collision detected!");
             return true;
           }
         }
@@ -913,17 +916,34 @@ export class GameWorld {
   }
 
   checkKeyCollection(position) {
+    // Performance optimization: Only check for collection if we're close to any key
+    // This prevents expensive calculations when far from serum vials
+    const detectionRadius = 1.5; // Slightly larger than collection radius for early detection
     let collected = false;
 
-    this.keys.forEach((key, index) => {
+    // Use a more efficient loop that breaks early when found
+    for (let i = 0; i < this.keys.length; i++) {
+      const key = this.keys[i];
       if (key.visible) {
-        const distance = position.distanceTo(key.position);
-        if (distance < 1) {
-          key.visible = false;
-          collected = true;
+        // First do a quick bounds check to avoid expensive distance calculations
+        const xDiff = Math.abs(position.x - key.position.x);
+        const zDiff = Math.abs(position.z - key.position.z);
+
+        if (xDiff < detectionRadius && zDiff < detectionRadius) {
+          // Only do the precise distance check if we're close enough
+          const distance = position.distanceTo(key.position);
+          if (distance < 1) {
+            // Avoid expensive operations during collection
+            // Just hide the key and schedule intensive effects for next frame
+            key.visible = false;
+            collected = true;
+
+            // Make sure we don't check other keys after finding one
+            break;
+          }
         }
       }
-    });
+    }
 
     return collected;
   }

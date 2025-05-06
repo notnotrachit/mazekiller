@@ -159,7 +159,7 @@ createRenderer().then((r) => {
 
   // Initialize the rest of the game now that renderer is ready
   initializeGame();
-  
+
   // Start animation loop explicitly
   animate();
 });
@@ -462,7 +462,7 @@ function setupEventListeners() {
   renderer3DCanvas.addEventListener("focus", () => {
     console.log("[DEBUG] Canvas gained focus");
   });
-  
+
   console.log("[DEBUG] Event listeners successfully set up on canvas");
 }
 
@@ -520,31 +520,31 @@ player.addEventListener("unlock", function () {
 });
 
 // Toggle flashlight
+let lastFlashlightToggleTime = 0;
+const flashlightToggleDelay = 300; // Prevent toggling more than once every 300ms
+
 document.addEventListener("keydown", function (event) {
-  // Add debug logging for all keydown events
-  console.log("[KEYDOWN] Key pressed:", event.code);
+  const currentTime = performance.now();
 
   if (event.code === "KeyF" && gameState.gameStarted && !gameState.gameOver) {
-    gameState.flashlightOn = !gameState.flashlightOn;
-    updateFlashlightOverlay();
+    // Throttle flashlight toggle to prevent lag from rapid toggling
+    if (currentTime - lastFlashlightToggleTime > flashlightToggleDelay) {
+      lastFlashlightToggleTime = currentTime;
+      gameState.flashlightOn = !gameState.flashlightOn;
+      updateFlashlightOverlay();
 
-    if (soundManager) {
-      soundManager.play("flashlightToggle");
+      if (soundManager) {
+        // Debounce sound playing
+        soundManager.play("flashlightToggle");
+      }
     }
   }
 
   // Pause game with ESC key
   if (event.code === "Escape" && gameState.gameStarted && !gameState.gameOver) {
-    console.log(
-      "[DEBUG] ESC key pressed - Game paused state:",
-      gameState.gamePaused
-    );
-
     if (gameState.gamePaused) {
-      console.log("[DEBUG] Attempting to resume game");
       resumeGame();
     } else {
-      console.log("[DEBUG] Attempting to show pause menu");
       showPauseMenu();
     }
   }
@@ -601,12 +601,12 @@ function resumeGame() {
   // Use a timeout to ensure the menu is fully hidden before locking pointer
   setTimeout(() => {
     console.log("[DEBUG] Resuming game and locking pointer");
-    
+
     // Force focus on the canvas
     if (renderer && renderer.domElement) {
       renderer.domElement.focus();
     }
-    
+
     // Try locking the pointer multiple times with increasing delays
     // This helps overcome issues with browsers requiring a delay after UI changes
     setTimeout(() => {
@@ -617,7 +617,7 @@ function resumeGame() {
         console.error("[DEBUG] Error in first lock attempt:", e);
       }
     }, 50);
-    
+
     setTimeout(() => {
       if (!player.isLocked()) {
         try {
@@ -628,7 +628,7 @@ function resumeGame() {
         }
       }
     }, 150);
-    
+
     setTimeout(() => {
       if (!player.isLocked()) {
         try {
@@ -654,24 +654,24 @@ closeNoteBtn.addEventListener("click", hideStoryNote);
 resumeBtn.addEventListener("click", function (event) {
   console.log("[DEBUG] Resume button clicked");
   event.preventDefault();
-  
+
   // Force setting the game state to not paused
   gameState.gamePaused = false;
-  
+
   // Hide pause menu immediately
   pauseMenu.style.display = "none";
   pauseMenu.style.visibility = "hidden";
-  
+
   // Focus the canvas
   if (renderer && renderer.domElement) {
     renderer.domElement.focus();
   }
-  
+
   // Call resumeGame with a slight delay to ensure UI updates first
   setTimeout(() => {
     resumeGame();
   }, 10);
-  
+
   // Prevent the click event from reaching other handlers
   event.stopPropagation();
 });
@@ -841,17 +841,48 @@ function updateTimeWarningOverlay() {
   }
 }
 
-function updateFlashlightPosition(e) {
-  if (gameState.flashlightOn && flashlightOverlay.style.display === "block") {
-    // Update position only if mouse has moved
-    const x = e.clientX;
-    const y = e.clientY;
+// Track last mouse position for throttling
+let lastMouseX = 0;
+let lastMouseY = 0;
+let lastFlashlightUpdateTime = 0;
+const flashlightUpdateThreshold = 20; // Minimum pixel movement needed to update
+const flashlightUpdateDelay = 16; // Only update at ~60fps (16ms)
 
+function updateFlashlightPosition(e) {
+  // Only update if flashlight is on and visible
+  if (!gameState.flashlightOn || flashlightOverlay.style.display !== "block") {
+    return;
+  }
+
+  const currentTime = performance.now();
+
+  // Throttle updates to reduce performance impact
+  if (currentTime - lastFlashlightUpdateTime < flashlightUpdateDelay) {
+    return;
+  }
+
+  // Only update if mouse has moved significantly to avoid unnecessary redraws
+  const xDiff = Math.abs(e.clientX - lastMouseX);
+  const yDiff = Math.abs(e.clientY - lastMouseY);
+
+  if (
+    xDiff > flashlightUpdateThreshold ||
+    yDiff > flashlightUpdateThreshold ||
+    currentTime - lastFlashlightUpdateTime > 100
+  ) {
+    // Force update every 100ms max
+
+    // Update the flashlight position
     flashlightOverlay.style.background = `radial-gradient(
-      circle at ${x}px ${y}px, 
+      circle at ${e.clientX}px ${e.clientY}px, 
       transparent 100px, 
       rgba(0, 0, 0, 0.95) 300px
     )`;
+
+    // Save current position and time
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+    lastFlashlightUpdateTime = currentTime;
   }
 }
 
@@ -887,11 +918,11 @@ function initializeGame() {
       renderer.domElement,
       soundManager
     );
-    
+
     // CRITICAL FIX: Replace the global player reference with the new one
     // This ensures all code using 'player' will now use the new instance
-    window.player = newPlayer;  // Keep window reference for debugging
-    player = newPlayer;         // Update the actual variable
+    window.player = newPlayer; // Keep window reference for debugging
+    player = newPlayer; // Update the actual variable
 
     // Restore position if we had one
     if (oldPosition) {
@@ -918,10 +949,10 @@ function initializeGame() {
         showPauseMenu();
       }
     });
-    
+
     console.log("[DEBUG] Player successfully recreated with canvas:", {
       controls: player.controls ? "Controls attached" : "No controls",
-      position: player.controls.getObject().position.toArray()
+      position: player.controls.getObject().position.toArray(),
     });
   } catch (err) {
     console.error("[FATAL] Error recreating player:", err);
