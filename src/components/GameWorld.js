@@ -22,15 +22,15 @@ export class GameWorld {
       : new THREE.TextureLoader();
     this.textureLoader.crossOrigin = "anonymous";
 
-    // Time of day settings
-    this.isDaytime = true;
-    this.timeOfDay = 1.0; // 1.0 = noon, 0.0 = midnight
+    // Time of day settings - changed to start in evening
+    this.isDaytime = false;
+    this.timeOfDay = 0.4; // Evening setting (between day and night)
     this.dayDuration = 300; // 5 minutes of game time = 1 day
     this.dayStartTime = Date.now();
 
     // Weather effects
     this.isRaining = false;
-    this.fogDensity = 0.01;
+    this.fogDensity = 0.08; // Slightly increased fog for evening ambiance
     this.rainIntensity = 0;
 
     // Environment objects
@@ -55,7 +55,7 @@ export class GameWorld {
     this.scene.fog = new THREE.FogExp2(0x080808, this.fogDensity);
 
     // Add global ambient light for better visibility
-    this.globalAmbient = new THREE.AmbientLight(0xcccccc, 0.4);
+    this.globalAmbient = new THREE.AmbientLight(0xafc3c7, 0.4);
     this.scene.add(this.globalAmbient);
 
     // Create ground
@@ -633,8 +633,15 @@ export class GameWorld {
       fog: false,
     });
 
-    // Use day sky initially
-    this.skybox = new THREE.Mesh(skyGeometry, this.daySkyMaterial);
+    // Evening sky material - warm orange/purple hues
+    this.eveningSkyMaterial = new THREE.MeshBasicMaterial({
+      color: 0xd46f4d, // Warm orange/sunset color
+      side: THREE.BackSide,
+      fog: false,
+    });
+
+    // Use evening sky initially
+    this.skybox = new THREE.Mesh(skyGeometry, this.eveningSkyMaterial);
     this.scene.add(this.skybox);
 
     // Add stars (visible at night)
@@ -865,35 +872,42 @@ export class GameWorld {
   }
 
   updateTimeOfDay(gameTime) {
-    // Update time of day based on game time
+    // Update time of day based on game time, but fixed more towards evening
     const dayProgress = (gameTime % this.dayDuration) / this.dayDuration;
 
-    // Smooth sinusoidal day-night cycle (1.0 = noon, 0.0 = midnight)
-    this.timeOfDay =
-      (Math.sin(dayProgress * Math.PI * 2 - Math.PI / 2) + 1) / 2;
+    // Modified cycle to stay in evening/sunset range longer
+    // Range is kept between 0.35 and 0.5 (evening) most of the time
+    this.timeOfDay = 0.35 + (Math.sin(dayProgress * Math.PI * 2) + 1) * 0.075;
 
-    // Update skybox
-    this.skybox.material.color.setRGB(
-      this.lerpValue(0x0a / 255, 0x87 / 255, this.timeOfDay),
-      this.lerpValue(0x0a / 255, 0xce / 255, this.timeOfDay),
-      this.lerpValue(0x14 / 255, 0xeb / 255, this.timeOfDay)
-    );
+    // Create a warm evening glow in the skybox
+    const eveningColor = new THREE.Color(0xd46f4d); // Base sunset orange
+    const nightColor = new THREE.Color(0x1a1a2e); // Deep blue night
+    const skyColor = new THREE.Color();
 
-    // Update stars visibility
-    this.stars.material.opacity = this.lerpValue(0.7, 0, this.timeOfDay);
+    // Blend between sunset and night colors
+    skyColor.lerpColors(nightColor, eveningColor, this.timeOfDay);
+    this.skybox.material.color.copy(skyColor);
 
-    // Update fog density (thicker at night)
-    this.fogDensity = this.lerpValue(0.05, 0.01, this.timeOfDay);
+    // Stars slightly visible in evening
+    this.stars.material.opacity = this.lerpValue(0.5, 0.1, this.timeOfDay);
+
+    // Keep fog density moderate for evening atmosphere
+    this.fogDensity = 0.02 + this.lerpValue(0.02, 0, this.timeOfDay);
     this.scene.fog.density = this.fogDensity;
 
-    // Update lighting
-    this.moonLight.intensity = this.lerpValue(0.5, 0, this.timeOfDay);
-    this.nightAmbient.intensity = this.lerpValue(0.3, 0, this.timeOfDay);
+    // Adjust fog color for evening
+    this.scene.fog.color.setHex(0x151425);
 
-    // Return state info
+    // Evening lighting
+    this.moonLight.intensity = 0.3;
+    this.moonLight.color.setHex(0xffb04c); // Warm evening light
+    this.nightAmbient.intensity = 0.25;
+    this.nightAmbient.color.setHex(0x4d5d7a); // Bluish ambient for evening shadows
+
+    // Return state info - always in transitioning state for evening
     return {
-      isNight: this.timeOfDay < 0.3,
-      isTransitioning: this.timeOfDay < 0.4 && this.timeOfDay > 0.2,
+      isNight: false,
+      isTransitioning: true, // Always in transition state for evening atmosphere
     };
   }
 
