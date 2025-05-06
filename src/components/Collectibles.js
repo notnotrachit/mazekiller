@@ -9,6 +9,10 @@ export class Collectibles {
     this.storyNotes = [];
     this.collectibleItems = [];
 
+    // Add collection effects queue for performance improvement
+    this.noteCollectionQueue = [];
+    this.noteCollectionParticles = [];
+
     // Story note content
     this.noteContent = [
       {
@@ -148,17 +152,51 @@ export class Collectibles {
   }
 
   update(delta, frustum) {
-    // Update story notes animations
+    // Process note collection effects
+    this.processNoteCollectionEffects();
+
+    // Update and cleanup note collection particles
+    if (this.noteCollectionParticles.length > 0) {
+      const now = Date.now();
+      // Process in reverse order for safe removal
+      for (let i = this.noteCollectionParticles.length - 1; i >= 0; i--) {
+        const particles = this.noteCollectionParticles[i];
+        const age = now - particles.userData.creationTime;
+
+        if (age > particles.userData.lifetime) {
+          // Remove expired particles
+          this.scene.remove(particles);
+          particles.geometry.dispose();
+          particles.material.dispose();
+          this.noteCollectionParticles.splice(i, 1);
+        } else {
+          // Fade out particles over their lifetime
+          const fade = 1 - age / particles.userData.lifetime;
+          particles.material.opacity = fade * 0.7;
+
+          // Float particles upward
+          const positions = particles.geometry.attributes.position.array;
+          for (let p = 0; p < positions.length; p += 3) {
+            positions[p + 1] += delta * 0.5; // Move upward
+          }
+          particles.geometry.attributes.position.needsUpdate = true;
+        }
+      }
+    }
+
+    // Update story notes animations - with performance optimization
     this.storyNotes.forEach((note) => {
       if (!note.collected && note.mesh) {
         // Only process notes that are in view (frustum culling)
         if (!frustum || frustum.intersectsObject(note.mesh)) {
-          // Floating effect
+          // Floating effect - simplified for better performance
+          const time = Date.now() * 0.001;
+          // Use integer math to avoid creating new objects every frame
           note.mesh.position.y =
             note.mesh.userData.originalY +
-            Math.sin(Date.now() * 0.001 + note.mesh.userData.floatOffset) * 0.1;
+            Math.sin(time + note.mesh.userData.floatOffset) * 0.1;
 
-          // Slow rotation
+          // Slow rotation - use delta to ensure smooth animation regardless of framerate
           note.mesh.rotation.y += delta * note.mesh.userData.rotationSpeed;
         }
       }
@@ -180,25 +218,114 @@ export class Collectibles {
       note: null,
     };
 
-    // Check for collisions with story notes
+    // Performance optimization: Check for notes in vicinity first
+    const detectionRadius = 1.5; // Same as previous value
+
+    // Check for collisions with story notes using the same optimization technique from GameWorld
     for (const note of this.storyNotes) {
-      if (!note.collected && playerPosition.distanceTo(note.position) < 1.5) {
-        note.collected = true;
-        note.mesh.visible = false;
+      if (!note.collected && note.mesh) {
+        // First do a quick bounds check to avoid expensive distance calculations
+        const xDiff = Math.abs(playerPosition.x - note.position.x);
+        const zDiff = Math.abs(playerPosition.z - note.position.z);
 
-        // Play collection sound
-        if (this.soundManager) {
-          this.soundManager.play("collectNote");
+        if (xDiff < detectionRadius && zDiff < detectionRadius) {
+          // Only do the precise distance check if we're close enough
+          const distance = playerPosition.distanceTo(note.position);
+          if (distance < 1.5) {
+            // PERFORMANCE FIX: Use deferred collection effect processing
+            // Just hide the note initially and queue the effect processing
+            note.collected = true;
+            note.mesh.visible = false;
+
+            // Store the content for UI
+            const content = note.content;
+
+            // Queue collection for processing over next few frames
+            this.noteCollectionQueue.push({
+              note: note,
+              time: performance.now(),
+              processed: false,
+            });
+
+            // Play sound using a small timeout to avoid performance impact
+            if (this.soundManager) {
+              setTimeout(() => {
+                this.soundManager.play("collectNote");
+              }, 10);
+            }
+
+            collisionResults.note = content;
+            break;
+          }
         }
-
-        collisionResults.note = note.content;
-        break;
       }
     }
 
-    // Check for collisions with other collectibles in the future
-
     return collisionResults;
+  }
+
+  // Method to process collection effects across frames - similar to GameWorld
+  processNoteCollectionEffects() {
+    if (this.noteCollectionQueue.length === 0) return;
+
+    // Process only one collection effect per frame
+    const effect = this.noteCollectionQueue[0];
+
+    // If this effect is already processed, remove it and return
+    if (effect.processed) {
+      this.noteCollectionQueue.shift();
+      return;
+    }
+
+    // Mark as processed so it gets removed next frame
+    effect.processed = true;
+
+    // Create a simple particle effect at the collection point
+    if (effect.note && effect.note.position) {
+      // PERFORMANCE IMPROVEMENT: Reduce particle count even further for third serum
+      const particleCount = this.noteCollectionQueue.length <= 2 ? 10 : 5;
+      const particleGeometry = new THREE.BufferGeometry();
+      const particleMaterial = new THREE.PointsMaterial({
+        color: 0xffee44, // Yellow-ish particles for notes
+        size: 0.08,
+        transparent: true,
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending,
+      });
+
+      // Create particles in a disc shape (flat on paper)
+      const particlePositions = new Float32Array(particleCount * 3);
+
+      for (let i = 0; i < particleCount; i++) {
+        // Random position in a disc
+        const radius = 0.2 + Math.random() * 0.3;
+        const angle = Math.random() * Math.PI * 2;
+
+        particlePositions[i * 3] =
+          effect.note.position.x + radius * Math.cos(angle);
+        particlePositions[i * 3 + 1] = effect.note.position.y + 0.2; // Just above ground
+        particlePositions[i * 3 + 2] =
+          effect.note.position.z + radius * Math.sin(angle);
+      }
+
+      particleGeometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(particlePositions, 3)
+      );
+
+      // Create the particle system
+      const particles = new THREE.Points(particleGeometry, particleMaterial);
+      particles.userData = {
+        creationTime: Date.now(),
+        lifetime: 800, // Shorter lifetime for note particles
+      };
+
+      // Add temporary particles to scene
+      this.scene.add(particles);
+
+      // Store for cleanup
+      this.noteCollectionParticles.push(particles);
+    }
   }
 
   reset() {

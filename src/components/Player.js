@@ -81,10 +81,6 @@ export class Player {
     // Ensure controls are properly initialized
     this.controls.isLocked = false;
 
-    // Flashlight
-    this.flashlightOn = false;
-    this.setupFlashlight();
-
     // Footstep timing
     this.footstepTimer = 0;
     this.footstepInterval = 0.5; // seconds between footsteps
@@ -158,9 +154,6 @@ export class Player {
             this.sprint = true;
           }
           break;
-        case "KeyF":
-          this.toggleFlashlight();
-          break;
       }
 
       // Debug: log key states
@@ -226,31 +219,6 @@ export class Player {
         document.dispatchEvent(testUpEvent);
       }, 100);
     }, 2000);
-  }
-
-  setupFlashlight() {
-    // Create a spotlight for the flashlight
-    this.flashlight = new THREE.SpotLight(0xffffff, 1, 30, Math.PI / 6, 0.5, 1);
-    this.flashlight.position.set(0, 0, 0);
-    this.flashlight.target.position.set(0, 0, -1);
-
-    // Add the flashlight to the camera
-    this.camera.add(this.flashlight);
-    this.camera.add(this.flashlight.target);
-
-    // Position the target in front of the camera
-    this.flashlight.target.position.set(0, 0, -1);
-
-    // Turn off initially
-    this.flashlight.visible = false;
-  }
-
-  toggleFlashlight() {
-    this.flashlightOn = !this.flashlightOn;
-    this.flashlight.visible = this.flashlightOn;
-    if (this.soundManager) {
-      this.soundManager.play("flashlightToggle");
-    }
   }
 
   createPlayerModel() {
@@ -565,9 +533,5 @@ export class Player {
     this.moveLeft = false;
     this.moveRight = false;
     this.sprint = false;
-
-    if (this.flashlightOn) {
-      this.toggleFlashlight();
-    }
   }
 }

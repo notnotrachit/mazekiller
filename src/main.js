@@ -31,17 +31,14 @@ const closeNoteBtn = document.querySelector(".close-note");
 const interactionPrompt = document.querySelector(".interaction-prompt");
 const instructionsPanel = document.querySelector(".instructions");
 const vignetteOverlay = document.createElement("div");
-const flashlightOverlay = document.createElement("div");
 const infectionOverlay = document.createElement("div");
 const timeWarningOverlay = document.createElement("div");
 
 // Add overlays to the DOM
 vignetteOverlay.className = "vignette-overlay";
-flashlightOverlay.className = "flashlight-overlay";
 infectionOverlay.className = "infection-overlay";
 timeWarningOverlay.className = "time-warning-overlay";
 document.body.appendChild(vignetteOverlay);
-document.body.appendChild(flashlightOverlay);
 document.body.appendChild(infectionOverlay);
 document.body.appendChild(timeWarningOverlay);
 
@@ -58,7 +55,6 @@ const gameState = {
   startTime: 0,
   elapsedTime: 0,
   timeLimit: 300, // 5 minutes in seconds
-  flashlightOn: false,
   objectives: [
     "Find serum vials to slow the infection",
     "Collect information about the maze",
@@ -528,26 +524,7 @@ player.addEventListener("unlock", function () {
 });
 
 // Toggle flashlight
-let lastFlashlightToggleTime = 0;
-const flashlightToggleDelay = 300; // Prevent toggling more than once every 300ms
-
 document.addEventListener("keydown", function (event) {
-  const currentTime = performance.now();
-
-  if (event.code === "KeyF" && gameState.gameStarted && !gameState.gameOver) {
-    // Throttle flashlight toggle to prevent lag from rapid toggling
-    if (currentTime - lastFlashlightToggleTime > flashlightToggleDelay) {
-      lastFlashlightToggleTime = currentTime;
-      gameState.flashlightOn = !gameState.flashlightOn;
-      updateFlashlightOverlay();
-
-      if (soundManager) {
-        // Debounce sound playing
-        soundManager.play("flashlightToggle");
-      }
-    }
-  }
-
   // Pause game with ESC key
   if (event.code === "Escape" && gameState.gameStarted && !gameState.gameOver) {
     if (gameState.gamePaused) {
@@ -562,14 +539,6 @@ document.addEventListener("keydown", function (event) {
     checkInteractions();
   }
 });
-
-function updateFlashlightOverlay() {
-  if (gameState.flashlightOn) {
-    flashlightOverlay.style.display = "block";
-  } else {
-    flashlightOverlay.style.display = "none";
-  }
-}
 
 // Update the pause menu display and handling
 function showPauseMenu() {
@@ -863,47 +832,6 @@ let lastFlashlightUpdateTime = 0;
 const flashlightUpdateThreshold = 20; // Minimum pixel movement needed to update
 const flashlightUpdateDelay = 16; // Only update at ~60fps (16ms)
 
-function updateFlashlightPosition(e) {
-  // Only update if flashlight is on and visible
-  if (!gameState.flashlightOn || flashlightOverlay.style.display !== "block") {
-    return;
-  }
-
-  const currentTime = performance.now();
-
-  // Throttle updates to reduce performance impact
-  if (currentTime - lastFlashlightUpdateTime < flashlightUpdateDelay) {
-    return;
-  }
-
-  // Only update if mouse has moved significantly to avoid unnecessary redraws
-  const xDiff = Math.abs(e.clientX - lastMouseX);
-  const yDiff = Math.abs(e.clientY - lastMouseY);
-
-  if (
-    xDiff > flashlightUpdateThreshold ||
-    yDiff > flashlightUpdateThreshold ||
-    currentTime - lastFlashlightUpdateTime > 100
-  ) {
-    // Force update every 100ms max
-
-    // Update the flashlight position
-    flashlightOverlay.style.background = `radial-gradient(
-      circle at ${e.clientX}px ${e.clientY}px, 
-      transparent 100px, 
-      rgba(0, 0, 0, 0.95) 300px
-    )`;
-
-    // Save current position and time
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
-    lastFlashlightUpdateTime = currentTime;
-  }
-}
-
-// Add mouse move listener for flashlight
-document.addEventListener("mousemove", updateFlashlightPosition);
-
 // Function to initialize the game after the renderer is ready
 function initializeGame() {
   console.log("[DEBUG] Initializing game and animation loop");
@@ -1068,10 +996,11 @@ function animate() {
       }
 
       try {
-        // Update player with collision checking
+        // PERFORMANCE IMPROVEMENT: Throttle collision checks based on player movement
+        // Only update player position at full rate, but throttle expensive collision checks
         const playerStatus = player.update(delta, (position) => {
           // Only check collisions if position changes significantly
-          if (position.distanceTo(player.getPosition()) > 0.001) {
+          if (position.distanceTo(player.getPosition()) > 0.01) {
             const hasCollision = gameWorld.checkWallCollision(position);
             return hasCollision;
           }
@@ -1087,19 +1016,39 @@ function animate() {
         console.error("[DEBUG] Error in player update:", error);
       }
 
-      // Update game world
+      // Update game world - note our optimized processCollectionEffects in GameWorld.js will be called here
       gameWorld.update(delta);
 
-      // Update collectibles without frustum to avoid errors
+      // Update collectibles with frustum culling for performance
       try {
-        collectibles.update(delta, null);
+        // Create a frustum for culling objects outside view
+        const frustum = new THREE.Frustum();
+        const matrix = new THREE.Matrix4().multiplyMatrices(
+          camera.projectionMatrix,
+          camera.matrixWorldInverse
+        );
+        frustum.setFromProjectionMatrix(matrix);
+
+        // Pass frustum to collectibles update for view-based optimization
+        collectibles.update(delta, frustum);
       } catch (error) {
         console.error("[DEBUG] Error in collectibles update:", error);
       }
 
-      // Update grievers - with distance-based processing
+      // Update grievers - with distance-based processing and throttling for 3rd serum
       const playerPosition = player.getPosition();
-      grievers.forEach((griever) => {
+
+      // PERFORMANCE IMPROVEMENT: Reduce griever updates when many collections happen
+      const isProcessingMany =
+        gameWorld.collectionEffectsQueue.length > 0 ||
+        collectibles.noteCollectionQueue.length > 0;
+
+      // Only process one griever per frame if we're handling many collection effects
+      const grieversToProcess =
+        isProcessingMany && gameState.serumCollected >= 2 ? 1 : grievers.length;
+
+      for (let i = 0; i < grieversToProcess; i++) {
+        const griever = grievers[i];
         // Only process grievers within a reasonable distance
         const distance = griever.position.distanceTo(playerPosition);
         if (distance < 30) {
@@ -1124,7 +1073,7 @@ function animate() {
             }
           }
         }
-      });
+      }
 
       // Check for key collection
       if (gameWorld.checkKeyCollection(playerPosition)) {

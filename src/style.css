@@ -567,7 +567,7 @@ canvas {
   font-family: var(--font-secondary);
 }
 
-/* Animations */
+/* Animation keyframes for various effects */
 @keyframes typing {
   from { width: 0 }
   to { width: 100% }
@@ -623,45 +623,54 @@ canvas {
   100% { clip: rect(54px, 9999px, 36px, 0); }
 }
 
-/* Flashlight Overlay */
-.flashlight-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(
-    circle at 50% 50%, 
-    transparent 100px, 
-    rgba(0, 0, 0, 0.95) 300px
-  );
-  pointer-events: none;
-  z-index: 150;
-  display: none;
+/* Severe flicker effect for high infection moments */
+.severe-flicker {
+  animation: severeFlicker 0.4s ease-in-out !important;
 }
 
-/* Vignette Overlay for Darkness */
-.vignette-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.8);
-  pointer-events: none;
-  z-index: 100;
+@keyframes severeFlicker {
+  0% { opacity: 1; filter: brightness(1); }
+  10% { opacity: 0.3; filter: brightness(0.3) blur(3px); }
+  20% { opacity: 0.7; filter: brightness(0.7) blur(1px); }
+  30% { opacity: 0.2; filter: brightness(0.2) blur(4px); }
+  40% { opacity: 0.5; filter: brightness(0.5) blur(2px); }
+  50% { opacity: 0.1; filter: brightness(0.1) blur(5px); }
+  60% { opacity: 0.6; filter: brightness(0.6) blur(1px); }
+  70% { opacity: 0.3; filter: brightness(0.3) blur(3px); }
+  85% { opacity: 0.8; filter: brightness(0.8) blur(1px); }
+  100% { opacity: 1; filter: brightness(1) blur(0); }
 }
 
-/* Infection Overlay - Red pulsing when infection is high */
+/* Critical flicker effect for near-failure moments */
+.critical-flicker {
+  animation: criticalFlicker 0.7s ease-in-out !important;
+}
+
+@keyframes criticalFlicker {
+  0% { opacity: 1; filter: brightness(1); }
+  10% { opacity: 0.1; filter: brightness(0.1) blur(6px); }
+  15% { opacity: 0.05; filter: brightness(0.05) blur(8px); }
+  25% { opacity: 0.2; filter: brightness(0.2) blur(5px); }
+  30% { opacity: 0.05; filter: brightness(0.05) blur(7px); }
+  45% { opacity: 0.3; filter: brightness(0.3) blur(4px); }
+  50% { opacity: 0; filter: brightness(0) blur(10px); }
+  55% { opacity: 0.2; filter: brightness(0.2) blur(6px); }
+  65% { opacity: 0.1; filter: brightness(0.1) blur(8px); }
+  70% { opacity: 0.3; filter: brightness(0.3) blur(5px); }
+  80% { opacity: 0.5; filter: brightness(0.5) blur(3px); }
+  90% { opacity: 0.7; filter: brightness(0.7) blur(1px); }
+  100% { opacity: 1; filter: brightness(1) blur(0); }
+}
+
 .infection-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(230, 57, 70, 0);
   pointer-events: none;
-  z-index: 140;
+  z-index: 200;
+  background-color: rgba(230, 57, 70, 0);
   transition: background-color 0.5s ease;
 }
 
@@ -677,6 +686,18 @@ canvas {
   z-index: 130;
 }
 
+.time-warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 180;
+  background-color: rgba(255, 183, 3, 0);
+  transition: background-color 0.3s ease;
+}
+
 /* Heartbeat animation for infection overlay */
 @keyframes heartbeat {
   0% { opacity: 0; }
@@ -686,11 +707,23 @@ canvas {
   100% { opacity: 0; }
 }
 
+@keyframes heartbeat {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
 /* Flash animation for time warning */
 @keyframes timeWarning {
   0% { opacity: 0; }
   50% { opacity: 0.2; }
   100% { opacity: 0; }
+}
+
+@keyframes timeWarning {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 
 /* Media Queries */

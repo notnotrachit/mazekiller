@@ -89,7 +89,6 @@ export class SoundManager {
       "gameOver",
       "victory",
       "heartbeat",
-      "flashlightToggle",
       "collectMedkit",
     ];
 
@@ -152,7 +151,6 @@ export class SoundManager {
         volume: 0.0,
         loop: true,
       },
-      flashlightToggle: { url: "assets/sounds/flashlight.mp3", volume: 0.5 },
     };
 
     // Try to load each sound with error handling

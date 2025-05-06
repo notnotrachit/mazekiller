@@ -979,43 +979,42 @@ export class GameWorld {
   }
 
   checkKeyCollection(position) {
-    // Performance optimization: Only check for collection if we're close to any key
-    // This prevents expensive calculations when far from serum vials
-    const detectionRadius = 1.5; // Slightly larger than collection radius for early detection
-    let collected = false;
-
-    // Use a more efficient loop that breaks early when found
+    // Check for serum collection
     for (let i = 0; i < this.keys.length; i++) {
       const key = this.keys[i];
-      if (key.visible) {
-        // First do a quick bounds check to avoid expensive distance calculations
-        const xDiff = Math.abs(position.x - key.position.x);
-        const zDiff = Math.abs(position.z - key.position.z);
 
-        if (xDiff < detectionRadius && zDiff < detectionRadius) {
-          // Only do the precise distance check if we're close enough
-          const distance = position.distanceTo(key.position);
-          if (distance < 1) {
-            // PERFORMANCE FIX: Use deferred collection effect processing
-            // Just hide the key initially and queue the effect processing
-            key.visible = false;
-            collected = true;
+      // Skip already collected keys
+      if (key.userData.collected) continue;
 
-            // Queue collection for processing over next few frames
-            this.collectionEffectsQueue.push({
-              key: key,
-              time: performance.now(),
-              processed: false,
-            });
+      // Optimization: quick bounds check first
+      const xDiff = Math.abs(position.x - key.position.x);
+      const zDiff = Math.abs(position.z - key.position.z);
+      const detectionRadius = 2;
 
-            // Make sure we don't check other keys after finding one
-            break;
-          }
+      if (xDiff < detectionRadius && zDiff < detectionRadius) {
+        // Do the more expensive distance check only if bounds check passes
+        const distance = position.distanceTo(key.position);
+
+        if (distance < 1.5) {
+          // PERFORMANCE OPTIMIZATION:
+          // Don't do everything at once - queue up the effect processing
+          key.userData.collected = true;
+          key.visible = false;
+
+          // Queue this collection for processing over several frames
+          this.collectionEffectsQueue.push({
+            key: key,
+            position: key.position.clone(),
+            time: performance.now(),
+            processed: false,
+          });
+
+          return true;
         }
       }
     }
 
-    return collected;
+    return false;
   }
 
   checkExit(position, collectedKeys) {
@@ -1030,33 +1029,6 @@ export class GameWorld {
     this.keys.forEach((key) => {
       key.visible = true;
     });
-  }
-
-  update(delta) {
-    // Animate keys
-    this.keys.forEach((key) => {
-      if (key.visible) {
-        key.rotation.z += delta * 2;
-      }
-    });
-
-    // Process any queued collection effects (limit per frame)
-    this.processCollectionEffects();
-
-    // Animate portal
-    if (this.portal) {
-      this.portal.rotation.z += delta * 0.5;
-    }
-
-    // Animate dynamic walls
-    this.walls.children.forEach((wall) => {
-      if (wall.userData.isDynamic && wall.userData.animate) {
-        wall.userData.animate(Date.now() * 0.001);
-      }
-    });
-
-    // Update dynamic walls
-    this.updateDynamicWalls(delta);
   }
 
   // New method to process collection effects over multiple frames
@@ -1075,9 +1047,149 @@ export class GameWorld {
     // Mark as processed so it gets removed next frame
     effect.processed = true;
 
-    // Perform any intensive operations that were causing lag during collection
-    // For now we're just doing simple cleanup, but you can add more effects here
-    // These will get distributed across frames
+    // Perform intensive operations in stages to distribute processing
+    // Create a visual collection effect (particle burst)
+    if (effect.key && effect.key.position) {
+      // Create a simple particle effect at the collection point
+      const particleCount = 15; // Reduced number for better performance
+      const particleGeometry = new THREE.BufferGeometry();
+      const particleMaterial = new THREE.PointsMaterial({
+        color: 0x0077ff,
+        size: 0.1,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending,
+      });
+
+      // Create particles in a sphere around collection point
+      const particlePositions = new Float32Array(particleCount * 3);
+
+      for (let i = 0; i < particleCount; i++) {
+        // Random position in a sphere
+        const radius = 0.3 + Math.random() * 0.7;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI;
+
+        particlePositions[i * 3] =
+          effect.key.position.x + radius * Math.sin(phi) * Math.cos(theta);
+        particlePositions[i * 3 + 1] =
+          effect.key.position.y + radius * Math.sin(phi) * Math.sin(theta);
+        particlePositions[i * 3 + 2] =
+          effect.key.position.z + radius * Math.cos(phi);
+      }
+
+      particleGeometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(particlePositions, 3)
+      );
+
+      // Create the particle system
+      const particles = new THREE.Points(particleGeometry, particleMaterial);
+      particles.userData = {
+        creationTime: Date.now(),
+        lifetime: 1000, // 1 second lifetime
+      };
+
+      // Add temporary particles to scene
+      this.scene.add(particles);
+
+      // Store for cleanup
+      if (!this.collectionParticles) this.collectionParticles = [];
+      this.collectionParticles.push(particles);
+    }
+  }
+
+  // Remove expired particle effects to avoid memory leaks
+  cleanupParticleEffects() {
+    if (!this.particleEffects || this.particleEffects.length === 0) return;
+
+    const now = Date.now();
+
+    // Process in reverse order for safe removal during iteration
+    for (let i = this.particleEffects.length - 1; i >= 0; i--) {
+      const particles = this.particleEffects[i];
+      const age = now - particles.userData.creationTime;
+
+      if (age > particles.userData.lifetime) {
+        // Remove expired particles
+        this.scene.remove(particles);
+        particles.geometry.dispose();
+        particles.material.dispose();
+        this.particleEffects.splice(i, 1);
+      } else {
+        // Update opacity for fading
+        const fade = 1 - age / particles.userData.lifetime;
+        particles.material.opacity = fade * 0.8;
+      }
+    }
+  }
+
+  // Update method with additions for particle management
+  update(delta) {
+    // Animate keys
+    this.keys.forEach((key) => {
+      if (key.visible) {
+        key.rotation.z += delta * 2;
+      }
+    });
+
+    // Process any queued collection effects (limit per frame)
+    this.processCollectionEffects();
+
+    // Update and clean up collection particles
+    if (this.collectionParticles && this.collectionParticles.length > 0) {
+      const now = Date.now();
+      // Process in reverse order for safe removal
+      for (let i = this.collectionParticles.length - 1; i >= 0; i--) {
+        const particles = this.collectionParticles[i];
+        const age = now - particles.userData.creationTime;
+
+        if (age > particles.userData.lifetime) {
+          // Remove expired particles
+          this.scene.remove(particles);
+          particles.geometry.dispose();
+          particles.material.dispose();
+          this.collectionParticles.splice(i, 1);
+        } else {
+          // Fade out particles over their lifetime
+          const fade = 1 - age / particles.userData.lifetime;
+          particles.material.opacity = fade * 0.8;
+
+          // Expand particles outward
+          const positions = particles.geometry.attributes.position.array;
+          for (let p = 0; p < positions.length; p += 3) {
+            const dirX = positions[p] - particles.position.x;
+            const dirY = positions[p + 1] - particles.position.y;
+            const dirZ = positions[p + 2] - particles.position.z;
+
+            // Normalize direction and apply expansion speed
+            const len = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+            if (len > 0.01) {
+              const speed = 0.5 * delta;
+              positions[p] += (dirX / len) * speed;
+              positions[p + 1] += (dirY / len) * speed;
+              positions[p + 2] += (dirZ / len) * speed;
+            }
+          }
+          particles.geometry.attributes.position.needsUpdate = true;
+        }
+      }
+    }
+
+    // Animate portal
+    if (this.portal) {
+      this.portal.rotation.z += delta * 0.5;
+    }
+
+    // Animate dynamic walls
+    this.walls.children.forEach((wall) => {
+      if (wall.userData.isDynamic && wall.userData.animate) {
+        wall.userData.animate(Date.now() * 0.001);
+      }
+    });
+
+    // Update dynamic walls
+    this.updateDynamicWalls(delta);
   }
 
   shuffleArray(array) {
