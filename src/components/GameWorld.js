@@ -51,6 +51,10 @@ export class GameWorld {
     // Set darker fog for atmosphere
     this.scene.fog = new THREE.FogExp2(0x080808, this.fogDensity);
 
+    // Add global ambient light for better visibility
+    this.globalAmbient = new THREE.AmbientLight(0xcccccc, 0.4);
+    this.scene.add(this.globalAmbient);
+
     // Create ground
     this.createGround();
 
@@ -94,7 +98,7 @@ export class GameWorld {
 
     // Create a fallback material in case texture loading fails
     const fallbackGroundMaterial = new THREE.MeshStandardMaterial({
-      color: 0x1a1a1a, // Almost black
+      color: 0x333333, // Brighter fallback color
       roughness: 0.9,
       metalness: 0.1,
     });
@@ -107,12 +111,12 @@ export class GameWorld {
         groundTexture.repeat.set(this.mazeSize, this.mazeSize);
         groundTexture.anisotropy = 16;
 
-        // Create mud-like/forest floor material
+        // Create mud-like/forest floor material with brighter color
         const groundMaterial = new THREE.MeshStandardMaterial({
           map: groundTexture,
-          roughness: 0.9,
+          roughness: 0.8,
           metalness: 0.1,
-          color: 0x1a1a1a, // Darken the texture
+          color: 0x444444, // Brighter ground color
         });
 
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
@@ -226,6 +230,10 @@ export class GameWorld {
               y: wall.position.y,
               z: wall.position.z,
             };
+
+            // Store the grid position for collision detection updates
+            wall.userData.gridPosition = { x: j, z: i };
+            wall.userData.originalGridPosition = { x: j, z: i };
 
             // Add some visual distinction to dynamic walls
             const dynamicMaterial = wallMaterial.clone();
@@ -351,10 +359,21 @@ export class GameWorld {
 
       // Only move walls at night
       if (this.timeOfDay < 0.3) {
+        // Keep track of walls that moved to update the maze grid
+        const movedWalls = [];
+
         this.walls.children.forEach((wall) => {
           if (wall.userData.isDynamic) {
             // 50% chance to move the wall
             if (Math.random() > 0.5) {
+              // Store original grid position for updating maze array
+              if (wall.userData.gridPosition) {
+                // Clear the original position in the maze grid
+                const oldPos = wall.userData.gridPosition;
+                this.maze[oldPos.z][oldPos.x] = 0; // Mark as empty
+                movedWalls.push(wall);
+              }
+
               // Move it to a new position
               const moveDir = Math.floor(Math.random() * 4);
               const moveAmt = this.cellSize;
@@ -373,10 +392,40 @@ export class GameWorld {
                   wall.position.x += moveAmt;
                   break;
               }
+
+              // Calculate new grid position
+              const newGridX = Math.floor(
+                (wall.position.x + (this.mazeSize * this.cellSize) / 2) /
+                  this.cellSize
+              );
+              const newGridZ = Math.floor(
+                (wall.position.z + (this.mazeSize * this.cellSize) / 2) /
+                  this.cellSize
+              );
+
+              // Store the new grid position
+              wall.userData.gridPosition = { x: newGridX, z: newGridZ };
+
+              // Update the maze grid with the new position if within bounds
+              if (
+                newGridX >= 0 &&
+                newGridX < this.mazeSize &&
+                newGridZ >= 0 &&
+                newGridZ < this.mazeSize
+              ) {
+                this.maze[newGridZ][newGridX] = 1; // Mark as wall
+              }
             } else {
               // Return to original position
               const originalPos = wall.userData.originalPosition;
               wall.position.set(originalPos.x, originalPos.y, originalPos.z);
+
+              // Restore original grid position in maze array
+              if (wall.userData.originalGridPosition) {
+                const origGrid = wall.userData.originalGridPosition;
+                this.maze[origGrid.z][origGrid.x] = 1; // Mark as wall
+                wall.userData.gridPosition = { ...origGrid }; // Update current grid position
+              }
             }
           }
         });
@@ -623,16 +672,16 @@ export class GameWorld {
   }
 
   setupNightLighting() {
-    // Add moon light
-    this.moonLight = new THREE.DirectionalLight(0x8888ff, 0);
+    // Add moon light (brighter than before)
+    this.moonLight = new THREE.DirectionalLight(0x8888ff, 0.5);
     this.moonLight.position.set(0, 10, -10).normalize();
     this.moonLight.castShadow = true;
     this.moonLight.shadow.mapSize.width = 1024;
     this.moonLight.shadow.mapSize.height = 1024;
     this.scene.add(this.moonLight);
 
-    // Add ambient night light
-    this.nightAmbient = new THREE.AmbientLight(0x334455, 0);
+    // Add ambient night light (brighter than before)
+    this.nightAmbient = new THREE.AmbientLight(0x334455, 0.4);
     this.scene.add(this.nightAmbient);
   }
 
