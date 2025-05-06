@@ -1022,8 +1022,24 @@ export class GameWorld {
 
   checkExit(position, collectedKeys) {
     if (collectedKeys === this.keyCount) {
-      const distance = position.distanceTo(this.portal.position);
-      return distance < 2;
+      // Get the portal's world position - either from portalGroup or fallback
+      const portalPosition = this.portalGroup
+        ? this.portalGroup.position
+        : this.portal.position;
+
+      // Calculate distance - increased detection radius from 2 to 4 for easier triggering
+      const distance = position.distanceTo(portalPosition);
+
+      // Debug log to help players
+      if (distance < 6) {
+        console.log(
+          `Near exit portal! Distance: ${distance.toFixed(
+            2
+          )}, need to be closer than 4.0`
+        );
+      }
+
+      return distance < 4; // Increased from 2 to 4
     }
     return false;
   }
