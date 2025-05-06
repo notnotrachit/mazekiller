@@ -31,7 +31,7 @@ export class Player {
     this.staminaDrainRate = 20; // per second
     this.infection = 0;
     this.maxInfection = 100;
-    this.infectionRate = 0.5; // Reduced from 1.0 to 0.3 to slow down infection
+    this.infectionRate = 0.2; // Reduced from 1.0 to 0.3 to slow down infection
 
     // Movement physics
     this.velocity = new THREE.Vector3();

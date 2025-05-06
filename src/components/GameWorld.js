@@ -1021,7 +1021,10 @@ export class GameWorld {
   }
 
   checkExit(position, collectedKeys) {
-    if (collectedKeys === this.keyCount) {
+    // Only need 3 out of 5 keys to exit (60% of total)
+    const requiredKeys = 3;
+
+    if (collectedKeys >= requiredKeys) {
       // Get the portal's world position - either from portalGroup or fallback
       const portalPosition = this.portalGroup
         ? this.portalGroup.position
@@ -1036,6 +1039,10 @@ export class GameWorld {
           `Near exit portal! Distance: ${distance.toFixed(
             2
           )}, need to be closer than 4.0`
+        );
+        // Show how many serums have been collected vs how many are needed
+        console.log(
+          `Serum collected: ${collectedKeys}/${requiredKeys} required`
         );
       }
 

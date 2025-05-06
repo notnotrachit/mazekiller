@@ -608,6 +608,23 @@ export class Game {
           this.gameState.serumCollected
         );
 
+        // Apply damage from grievers if player was hit
+        if (
+          grieverProcessResult.playerWasHit &&
+          grieverProcessResult.damage > 0
+        ) {
+          // Apply damage to player
+          const playerDied = this.player.takeDamage(
+            grieverProcessResult.damage
+          );
+
+          // If player health reaches zero, they die
+          if (playerDied) {
+            this.gameLose("griever");
+            return;
+          }
+        }
+
         // Check if player was killed by a griever
         if (grieverProcessResult.playerDied) {
           this.gameLose("griever");

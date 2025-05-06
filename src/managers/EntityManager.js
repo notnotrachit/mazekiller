@@ -71,6 +71,8 @@ export class EntityManager {
   ) {
     const result = {
       playerDied: false,
+      playerWasHit: false,
+      damage: 0,
     };
 
     // Only process one griever per frame if we're handling many collection effects
@@ -96,6 +98,14 @@ export class EntityManager {
         if (distance < 3 && griever.checkPlayerCollision(playerPosition)) {
           result.playerWasHit = true;
           result.damage = 34; // One hit takes ~1/3 health
+
+          // Play attack sound if available
+          if (this.soundManager) {
+            this.soundManager.play("grieverAttack", 1.0);
+          }
+
+          // Debug message
+          console.log("GRIEVER: Player hit! Damage: " + result.damage);
         }
       }
     }
