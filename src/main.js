@@ -99,7 +99,7 @@ async function createRenderer() {
   return new THREE.WebGLRenderer({ antialias: true });
 }
 
-// Camera setup
+// Camera setup with detailed logging
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
@@ -107,6 +107,15 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 camera.position.y = 1.6; // Player height
+
+console.log("[DEBUG] Camera initialization:", {
+  fov: camera.fov,
+  aspect: camera.aspect,
+  near: camera.near,
+  far: camera.far,
+  position: camera.position,
+  quaternion: camera.quaternion,
+});
 
 // Animation loop variables - initialize them before the animate function
 const clock = new THREE.Clock();
@@ -116,6 +125,8 @@ let lastTime = 0; // Will be properly initialized when renderer is ready
 
 // Create renderer (async)
 let renderer;
+let renderer3DCanvas; // Declare canvas reference at a higher scope
+let rendererInitialized = false; // Flag to track renderer initialization
 
 createRenderer().then((r) => {
   renderer = r;
@@ -125,11 +136,32 @@ createRenderer().then((r) => {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.body.appendChild(renderer.domElement);
 
+  // Store canvas reference as soon as it's created
+  renderer3DCanvas = renderer.domElement;
+
+  // Make sure we have focus for keyboard events
+  renderer3DCanvas.setAttribute("tabindex", "0");
+  renderer3DCanvas.style.outline = "none"; // Remove focus outline
+
+  console.log("[DEBUG] Renderer initialized:", {
+    size: {
+      width: renderer.domElement.width,
+      height: renderer.domElement.height,
+    },
+    pixelRatio: renderer.getPixelRatio(),
+  });
+
+  // Set flag to indicate renderer is ready
+  rendererInitialized = true;
+
   // Initialize animation variables
   lastTime = performance.now();
 
   // Initialize the rest of the game now that renderer is ready
   initializeGame();
+  
+  // Start animation loop explicitly
+  animate();
 });
 
 // Loading manager
@@ -196,17 +228,34 @@ try {
 // Initialize game world
 const gameWorld = new GameWorld(scene, loadingManager);
 
-// Create player
+// Create player with detailed logging
+console.log("[DEBUG] Creating player with parameters:", {
+  scene: scene ? "Scene object present" : "Missing scene",
+  camera: camera ? "Camera object present" : "Missing camera",
+  domElement: document.body ? "DOM element present" : "Missing DOM element",
+});
+
 const player = new Player(scene, camera, document.body, soundManager);
 
-// Set player starting position
-player.controls
-  .getObject()
-  .position.set(
-    (-gameWorld.mazeSize / 2 + 1) * gameWorld.cellSize,
-    1.6,
-    (-gameWorld.mazeSize / 2 + 1) * gameWorld.cellSize
-  );
+// Set player starting position with validation
+const startX = (-gameWorld.mazeSize / 2 + 1) * gameWorld.cellSize;
+const startZ = (-gameWorld.mazeSize / 2 + 1) * gameWorld.cellSize;
+
+console.log("[DEBUG] Setting player start position:", {
+  startX,
+  startY: 1.6,
+  startZ,
+  mazeSize: gameWorld.mazeSize,
+  cellSize: gameWorld.cellSize,
+});
+
+player.controls.getObject().position.set(startX, 1.6, startZ);
+
+// Verify player position was set correctly
+console.log("[DEBUG] Player position after set:", {
+  position: player.controls.getObject().position,
+  controls: player.controls.isLocked ? "Locked" : "Unlocked",
+});
 
 // Initialize collectibles system
 const collectibles = new Collectibles(scene, soundManager);
@@ -366,13 +415,56 @@ startGameBtn.addEventListener("click", () => {
 });
 
 // Add mouse controls instruction and click event handler for the game canvas
-const renderer3DCanvas = renderer.domElement;
-renderer3DCanvas.addEventListener("click", () => {
-  if (gameState.gameStarted && !gameState.gamePaused && !gameState.gameOver) {
-    // This click will attempt to lock the pointer if it isn't already locked
-    player.lock();
+function setupEventListeners() {
+  if (!renderer || !renderer.domElement) {
+    console.warn("[DEBUG] Cannot set up event listeners - renderer not ready");
+    return;
   }
-});
+
+  // Store reference to canvas
+  renderer3DCanvas = renderer.domElement;
+
+  // Make sure we have focus for keyboard events
+  renderer3DCanvas.setAttribute("tabindex", "0");
+  renderer3DCanvas.style.outline = "none"; // Remove focus outline
+  renderer3DCanvas.focus();
+
+  // Ensure we get focus when clicking the canvas
+  renderer3DCanvas.addEventListener("mousedown", () => {
+    renderer3DCanvas.focus();
+    console.log("[DEBUG] Canvas focused on mousedown");
+  });
+
+  // Add a click handler that also ensures focus and pointer lock
+  renderer3DCanvas.addEventListener("click", () => {
+    renderer3DCanvas.focus();
+
+    // If game is running (not over), handle pointer lock
+    if (gameState.gameStarted && !gameState.gameOver) {
+      // If game is paused and pause menu is visible, clicking should resume the game
+      if (gameState.gamePaused && pauseMenu.style.display === "flex") {
+        resumeGame(); // This will hide the pause menu and lock the pointer
+      }
+      // If not paused, just lock the pointer
+      else if (!gameState.gamePaused) {
+        player.lock();
+      }
+      console.log("[DEBUG] Canvas clicked - Focus and pointer lock handled");
+    }
+  });
+
+  // Log when we lose focus
+  renderer3DCanvas.addEventListener("blur", () => {
+    console.log("[DEBUG] Canvas lost focus");
+  });
+
+  // Log when we gain focus
+  renderer3DCanvas.addEventListener("focus", () => {
+    console.log("[DEBUG] Canvas gained focus");
+  });
+  
+  console.log("[DEBUG] Event listeners successfully set up on canvas");
+}
 
 // Game functions
 function startGame() {
@@ -390,6 +482,10 @@ function startGame() {
         instructionsPanel.style.display = "none";
       }, 500);
     }, 10000);
+
+    // Ensure the DOM element has focus
+    renderer.domElement.focus();
+    console.log("Game started, canvas focused");
 
     // Lock pointer for player control
     player.lock();
@@ -425,6 +521,9 @@ player.addEventListener("unlock", function () {
 
 // Toggle flashlight
 document.addEventListener("keydown", function (event) {
+  // Add debug logging for all keydown events
+  console.log("[KEYDOWN] Key pressed:", event.code);
+
   if (event.code === "KeyF" && gameState.gameStarted && !gameState.gameOver) {
     gameState.flashlightOn = !gameState.flashlightOn;
     updateFlashlightOverlay();
@@ -436,9 +535,16 @@ document.addEventListener("keydown", function (event) {
 
   // Pause game with ESC key
   if (event.code === "Escape" && gameState.gameStarted && !gameState.gameOver) {
+    console.log(
+      "[DEBUG] ESC key pressed - Game paused state:",
+      gameState.gamePaused
+    );
+
     if (gameState.gamePaused) {
+      console.log("[DEBUG] Attempting to resume game");
       resumeGame();
     } else {
+      console.log("[DEBUG] Attempting to show pause menu");
       showPauseMenu();
     }
   }
@@ -457,22 +563,118 @@ function updateFlashlightOverlay() {
   }
 }
 
+// Update the pause menu display and handling
 function showPauseMenu() {
-  player.unlock();
-  gameState.gamePaused = true;
+  console.log("[DEBUG] showPauseMenu called");
+
+  // Make sure the menu is visible and styled correctly first
+  pauseMenu.style.opacity = "1";
+  pauseMenu.style.visibility = "visible";
   pauseMenu.style.display = "flex";
+
+  // Force a reflow to ensure the browser has applied the style changes
+  void pauseMenu.offsetWidth;
+
+  // Set the game state
+  gameState.gamePaused = true;
+
+  // Unlock the pointer AFTER ensuring menu is visible
+  player.unlock();
+
+  console.log("[DEBUG] Pause menu should now be visible:", {
+    display: pauseMenu.style.display,
+    visibility: pauseMenu.style.visibility,
+    opacity: pauseMenu.style.opacity,
+  });
 }
 
 function resumeGame() {
+  console.log("[DEBUG] resumeGame called");
+
+  // Hide the pause menu completely first
   pauseMenu.style.display = "none";
-  player.lock();
+  pauseMenu.style.visibility = "hidden";
+
+  // Update game state
+  gameState.gamePaused = false;
+
+  // Use a timeout to ensure the menu is fully hidden before locking pointer
+  setTimeout(() => {
+    console.log("[DEBUG] Resuming game and locking pointer");
+    
+    // Force focus on the canvas
+    if (renderer && renderer.domElement) {
+      renderer.domElement.focus();
+    }
+    
+    // Try locking the pointer multiple times with increasing delays
+    // This helps overcome issues with browsers requiring a delay after UI changes
+    setTimeout(() => {
+      try {
+        player.lock();
+        console.log("[DEBUG] First attempt to lock pointer");
+      } catch (e) {
+        console.error("[DEBUG] Error in first lock attempt:", e);
+      }
+    }, 50);
+    
+    setTimeout(() => {
+      if (!player.isLocked()) {
+        try {
+          console.log("[DEBUG] Second attempt to lock pointer");
+          player.lock();
+        } catch (e) {
+          console.error("[DEBUG] Error in second lock attempt:", e);
+        }
+      }
+    }, 150);
+    
+    setTimeout(() => {
+      if (!player.isLocked()) {
+        try {
+          console.log("[DEBUG] Third attempt to lock pointer");
+          // Try direct approach if player.lock() isn't working
+          if (renderer.domElement.requestPointerLock) {
+            renderer.domElement.requestPointerLock();
+          }
+        } catch (e) {
+          console.error("[DEBUG] Error in third lock attempt:", e);
+        }
+      }
+    }, 300);
+  }, 50);
 }
 
-resumeBtn.addEventListener("click", resumeGame);
 restartFromPauseBtn.addEventListener("click", resetGame);
 restartBtn.addEventListener("click", resetGame);
 playAgainBtn.addEventListener("click", resetGame);
 closeNoteBtn.addEventListener("click", hideStoryNote);
+
+// Add direct click handler for resume button
+resumeBtn.addEventListener("click", function (event) {
+  console.log("[DEBUG] Resume button clicked");
+  event.preventDefault();
+  
+  // Force setting the game state to not paused
+  gameState.gamePaused = false;
+  
+  // Hide pause menu immediately
+  pauseMenu.style.display = "none";
+  pauseMenu.style.visibility = "hidden";
+  
+  // Focus the canvas
+  if (renderer && renderer.domElement) {
+    renderer.domElement.focus();
+  }
+  
+  // Call resumeGame with a slight delay to ensure UI updates first
+  setTimeout(() => {
+    resumeGame();
+  }, 10);
+  
+  // Prevent the click event from reaching other handlers
+  event.stopPropagation();
+});
 
 function gameWin() {
   gameState.gameOver = true;
@@ -658,143 +860,233 @@ document.addEventListener("mousemove", updateFlashlightPosition);
 
 // Function to initialize the game after the renderer is ready
 function initializeGame() {
-  // Add mouse controls event handler for the game canvas
-  const renderer3DCanvas = renderer.domElement;
-  renderer3DCanvas.addEventListener("click", () => {
-    if (gameState.gameStarted && !gameState.gamePaused && !gameState.gameOver) {
-      player.lock();
-    }
-  });
+  console.log("[DEBUG] Initializing game and animation loop");
 
-  // Start the animation loop
-  animate();
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-
-  // Throttle rendering for consistent frame rate
-  const now = performance.now();
-  const elapsed = now - lastTime;
-
-  if (elapsed < frameInterval) {
-    return; // Skip this frame to maintain frame rate
+  // Don't proceed if renderer isn't ready
+  if (!renderer || !renderer.domElement) {
+    console.error("[FATAL] Cannot initialize game - renderer not ready");
+    return;
   }
 
-  // Calculate delta with frame rate limiting
-  const delta = Math.min(clock.getDelta(), 0.1); // Cap delta to avoid huge jumps
-  lastTime = now - (elapsed % frameInterval);
+  // Set up the canvas event listeners before proceeding
+  setupEventListeners();
 
-  // Only render if the renderer is initialized
-  if (!renderer) return;
-
-  if (gameState.gameStarted && !gameState.gameOver && !gameState.gamePaused) {
-    // Update game time
-    gameState.elapsedTime = Date.now() - gameState.startTime;
-    const timeRemaining = Math.max(
-      0,
-      gameState.timeLimit - gameState.elapsedTime / 1000
-    );
-    document.getElementById("timer").textContent = `Time: ${formatTime(
-      timeRemaining
-    )}`;
-
-    // Check for time up
-    if (timeRemaining <= 0) {
-      gameLose("time");
-      return;
+  // CRITICAL FIX: Re-create the player with the correct DOM element (canvas)
+  try {
+    // Store the old player position if it exists
+    let oldPosition = null;
+    if (player && player.controls) {
+      oldPosition = player.controls.getObject().position.clone();
     }
 
-    // Update environment based on time
-    const environmentStatus = gameWorld.updateTimeOfDay(
-      gameState.elapsedTime / 1000
+    // Create a new player instance with the canvas as the domElement
+    console.log("[DEBUG] Re-creating player with canvas element");
+    const newPlayer = new Player(
+      scene,
+      camera,
+      renderer.domElement,
+      soundManager
     );
-    gameState.environmentStatus = environmentStatus;
+    
+    // CRITICAL FIX: Replace the global player reference with the new one
+    // This ensures all code using 'player' will now use the new instance
+    window.player = newPlayer;  // Keep window reference for debugging
+    player = newPlayer;         // Update the actual variable
 
-    // Update time warning overlay
-    updateTimeWarningOverlay();
-
-    // Update infection overlay
-    updateInfectionOverlay();
-
-    // Cycle objectives periodically
-    gameState.objectiveTimer += delta;
-    if (gameState.objectiveTimer > gameState.objectiveDisplayTime) {
-      cycleObjective();
+    // Restore position if we had one
+    if (oldPosition) {
+      player.controls.getObject().position.copy(oldPosition);
+    } else {
+      player.controls.getObject().position.set(startX, 1.6, startZ);
     }
 
-    // Update player with collision detection
-    const playerStatus = player.update(delta, (position) =>
-      gameWorld.checkWallCollision(position)
-    );
+    // Re-establish event listeners for player
+    player.addEventListener("lock", function () {
+      if (!gameState.gameStarted) {
+        gameState.gameStarted = true;
+        gameState.startTime = Date.now();
+      }
 
-    // Handle player states from update
-    if (playerStatus === "infected") {
-      gameLose("infected");
-      return;
-    }
-
-    // Frustum culling - only update objects in view
-    const frustum = new THREE.Frustum();
-    const projScreenMatrix = new THREE.Matrix4();
-    projScreenMatrix.multiplyMatrices(
-      camera.projectionMatrix,
-      camera.matrixWorldInverse
-    );
-    frustum.setFromProjectionMatrix(projScreenMatrix);
-
-    // Update game world
-    gameWorld.update(delta);
-
-    // Update collectibles - only those in view
-    collectibles.update(delta, frustum);
-
-    // Update grievers - with distance-based processing
-    const playerPosition = player.getPosition();
-    grievers.forEach((griever) => {
-      // Only process grievers within a reasonable distance
-      const distance = griever.position.distanceTo(playerPosition);
-      if (distance < 30) {
-        // Only process grievers within 30 units
-        // Grievers are more active at night
-        const aggressionMultiplier = gameState.environmentStatus.isNight
-          ? 2.0
-          : gameState.environmentStatus.isTransitioning
-          ? 1.5
-          : 1.0;
-
-        griever.update(delta, playerPosition, aggressionMultiplier);
-
-        // Check if griever caught player - only if very close
-        if (distance < 3 && griever.checkPlayerCollision(playerPosition)) {
-          // Player takes damage
-          const playerDied = player.takeDamage(34); // One hit takes ~1/3 health
-
-          if (playerDied) {
-            gameLose("griever");
-            return;
-          }
-        }
+      gameState.gamePaused = false;
+      if (pauseMenu.style.display === "flex") {
+        pauseMenu.style.display = "none";
       }
     });
 
-    // Check for key collection
-    if (gameWorld.checkKeyCollection(playerPosition)) {
-      gameState.serumCollected++;
-      document.getElementById(
-        "collected"
-      ).textContent = `Serum: ${gameState.serumCollected}/${gameState.totalSerum}`;
+    player.addEventListener("unlock", function () {
+      if (gameState.gameStarted && !gameState.gameOver) {
+        showPauseMenu();
+      }
+    });
+    
+    console.log("[DEBUG] Player successfully recreated with canvas:", {
+      controls: player.controls ? "Controls attached" : "No controls",
+      position: player.controls.getObject().position.toArray()
+    });
+  } catch (err) {
+    console.error("[FATAL] Error recreating player:", err);
+  }
 
-      // Slow infection when collecting serum
-      player.reduceInfection(15);
-    }
+  // Basic scene light (ambient) to ensure something is visible
+  const ambientLight = new THREE.AmbientLight(0x404040, 1);
+  scene.add(ambientLight);
 
-    // Check if player reached exit
-    if (gameWorld.checkExit(playerPosition, gameState.serumCollected)) {
-      gameWin();
+  // Set camera position explicitly
+  camera.position.set(startX, 1.6, startZ);
+  camera.lookAt(0, 1.6, 0);
+
+  // Set start time and mark the game as not started yet (will start on player lock)
+  gameState.startTime = Date.now();
+  gameState.gameStarted = false;
+
+  // Make the loader go away
+  dismissLoadingScreen();
+
+  // Focus the canvas
+  if (renderer.domElement) {
+    renderer.domElement.focus();
+    console.log("[DEBUG] Canvas focused during initialization");
+  }
+
+  console.log("[DEBUG] Game initialization complete");
+}
+
+function animate() {
+  // Continue animation loop
+  requestAnimationFrame(animate);
+
+  // Don't proceed if renderer isn't initialized
+  if (!renderer) {
+    console.warn("[DEBUG] Skipping animation frame - renderer not ready");
+    return;
+  }
+
+  // Get precise delta time
+  const now = performance.now();
+  const elapsed = now - lastTime;
+
+  // Calculate delta time in seconds, capped at 100ms to prevent huge jumps
+  const delta = Math.min(elapsed / 1000, 0.1);
+  lastTime = now;
+
+  // Always render even if game hasn't started to prevent black screen
+  if (gameState.gameStarted) {
+    // Update game time even when paused
+    gameState.elapsedTime = Date.now() - gameState.startTime;
+
+    // Only process gameplay when not paused or game over
+    if (!gameState.gameOver && !gameState.gamePaused) {
+      // Update time UI
+      const timeRemaining = Math.max(
+        0,
+        gameState.timeLimit - gameState.elapsedTime / 1000
+      );
+      document.getElementById("timer").textContent = `Time: ${formatTime(
+        timeRemaining
+      )}`;
+
+      // Check for time up
+      if (timeRemaining <= 0) {
+        gameLose("time");
+        return;
+      }
+
+      // Update environment based on time
+      const environmentStatus = gameWorld.updateTimeOfDay(
+        gameState.elapsedTime / 1000
+      );
+      gameState.environmentStatus = environmentStatus;
+
+      // Update time warning overlay
+      updateTimeWarningOverlay();
+
+      // Update infection overlay
+      updateInfectionOverlay();
+
+      // Cycle objectives periodically
+      gameState.objectiveTimer += delta;
+      if (gameState.objectiveTimer > gameState.objectiveDisplayTime) {
+        cycleObjective();
+      }
+
+      try {
+        // Update player with collision checking
+        const playerStatus = player.update(delta, (position) => {
+          // Only check collisions if position changes significantly
+          if (position.distanceTo(player.getPosition()) > 0.001) {
+            const hasCollision = gameWorld.checkWallCollision(position);
+            return hasCollision;
+          }
+          return false;
+        });
+
+        // Handle player states from update
+        if (playerStatus === "infected") {
+          gameLose("infected");
+          return;
+        }
+      } catch (error) {
+        console.error("[DEBUG] Error in player update:", error);
+      }
+
+      // Update game world
+      gameWorld.update(delta);
+
+      // Update collectibles without frustum to avoid errors
+      try {
+        collectibles.update(delta, null);
+      } catch (error) {
+        console.error("[DEBUG] Error in collectibles update:", error);
+      }
+
+      // Update grievers - with distance-based processing
+      const playerPosition = player.getPosition();
+      grievers.forEach((griever) => {
+        // Only process grievers within a reasonable distance
+        const distance = griever.position.distanceTo(playerPosition);
+        if (distance < 30) {
+          // Only process grievers within 30 units
+          // Grievers are more active at night
+          const aggressionMultiplier = gameState.environmentStatus.isNight
+            ? 2.0
+            : gameState.environmentStatus.isTransitioning
+            ? 1.5
+            : 1.0;
+
+          griever.update(delta, playerPosition, aggressionMultiplier);
+
+          // Check if griever caught player - only if very close
+          if (distance < 3 && griever.checkPlayerCollision(playerPosition)) {
+            // Player takes damage
+            const playerDied = player.takeDamage(34); // One hit takes ~1/3 health
+
+            if (playerDied) {
+              gameLose("griever");
+              return;
+            }
+          }
+        }
+      });
+
+      // Check for key collection
+      if (gameWorld.checkKeyCollection(playerPosition)) {
+        gameState.serumCollected++;
+        document.getElementById(
+          "collected"
+        ).textContent = `Serum: ${gameState.serumCollected}/${gameState.totalSerum}`;
+
+        // Slow infection when collecting serum
+        player.reduceInfection(15);
+      }
+
+      // Check if player reached exit
+      if (gameWorld.checkExit(playerPosition, gameState.serumCollected)) {
+        gameWin();
+      }
     }
   }
 
+  // Always render scene even if not playing
   renderer.render(scene, camera);
 }
 

@@ -307,14 +307,35 @@ export class SoundManager {
   play(soundName, rate = 1.0) {
     // Try to initialize if not done yet
     if (!this.initialized) {
+      // Don't try to play sounds before initialization is triggered by user interaction
+      // console.warn(`SoundManager not initialized, cannot play ${soundName}`);
+      // return null;
+      // OR attempt initialization, but be aware it might fail silently before interaction
       this.initializeAfterUserInteraction();
     }
 
     try {
-      if (this.sounds[soundName]) {
-        this.sounds[soundName].rate(rate);
-        this.sounds[soundName].play();
-        return this.sounds[soundName];
+      const sound = this.sounds[soundName];
+      if (sound) {
+        // Check if the rate method exists before calling it
+        if (typeof sound.rate === "function") {
+          sound.rate(rate);
+        } else if (rate !== 1.0) {
+          // Log a warning if a rate was requested but couldn't be set
+          console.warn(
+            `Sound ${soundName} does not support playback rate changes.`
+          );
+        }
+
+        // Check if play method exists
+        if (typeof sound.play === "function") {
+          sound.play();
+          return sound;
+        } else {
+          console.warn(`Sound ${soundName} does not have a play method.`);
+        }
+      } else {
+        console.warn(`Sound ${soundName} not found.`);
       }
     } catch (error) {
       console.warn(`Error playing sound ${soundName}:`, error);

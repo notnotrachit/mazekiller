@@ -850,7 +850,8 @@ export class GameWorld {
   }
 
   checkWallCollision(position) {
-    const playerRadius = 0.5;
+    const playerRadius = 0.4; // Reduced from 0.5 for less restrictive collisions
+    const collisionTolerance = 0.1; // Added tolerance for smoother movement
 
     // Convert world position to maze grid coordinates
     const gridX = Math.floor(
@@ -859,6 +860,9 @@ export class GameWorld {
     const gridZ = Math.floor(
       (position.z + (this.mazeSize * this.cellSize) / 2) / this.cellSize
     );
+
+    console.log("[DEBUG] Collision check - Position:", position);
+    console.log("[DEBUG] Grid coordinates - X:", gridX, "Z:", gridZ);
 
     // Check surrounding cells
     for (let i = -1; i <= 1; i++) {
@@ -885,11 +889,20 @@ export class GameWorld {
           const dx = position.x - wallX;
           const dz = position.z - wallZ;
 
-          // Check if player is colliding with wall
+          console.log("[DEBUG] Wall found - Wall position:", {
+            x: wallX,
+            z: wallZ,
+          });
+          console.log("[DEBUG] Distance to wall - dx:", dx, "dz:", dz);
+
+          // Check if player is colliding with wall (with tolerance)
+          const collisionThreshold =
+            this.cellSize / 2 + playerRadius - collisionTolerance;
           if (
-            Math.abs(dx) < this.cellSize / 2 + playerRadius &&
-            Math.abs(dz) < this.cellSize / 2 + playerRadius
+            Math.abs(dx) < collisionThreshold &&
+            Math.abs(dz) < collisionThreshold
           ) {
+            console.log("[DEBUG] Collision detected!");
             return true;
           }
         }
