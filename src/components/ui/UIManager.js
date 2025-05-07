@@ -85,15 +85,18 @@ export class UIManager {
 
     // Restart buttons
     this.restartBtn.addEventListener("click", () => {
-      if (this.restartCallback) this.restartCallback();
+      // Refresh the page instead of calling restart callback
+      window.location.reload();
     });
 
     this.restartFromPauseBtn.addEventListener("click", () => {
-      if (this.restartCallback) this.restartCallback();
+      // Refresh the page instead of calling restart callback
+      window.location.reload();
     });
 
     this.playAgainBtn.addEventListener("click", () => {
-      if (this.restartCallback) this.restartCallback();
+      // Refresh the page instead of calling restart callback
+      window.location.reload();
     });
 
     // Resume button with special handling

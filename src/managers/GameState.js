@@ -15,6 +15,8 @@ export class GameState {
       noteReading: false,
       startTime: 0,
       elapsedTime: 0,
+      pausedTime: 0,     // Total time spent paused
+      pauseStartTime: 0, // Timestamp when pause begins
       timeLimit: 300, // 5 minutes in seconds
       objectives: [
         "Find serum vials to slow the infection",
@@ -39,11 +41,22 @@ export class GameState {
   }
 
   pauseGame() {
-    this.state.gamePaused = true;
+    if (!this.state.gamePaused) {
+      this.state.gamePaused = true;
+      // Record the time when the game was paused
+      this.state.pauseStartTime = Date.now();
+    }
   }
 
   resumeGame() {
-    this.state.gamePaused = false;
+    if (this.state.gamePaused) {
+      this.state.gamePaused = false;
+      // Calculate how long the game was paused and add to total pausedTime
+      if (this.state.pauseStartTime > 0) {
+        this.state.pausedTime += Date.now() - this.state.pauseStartTime;
+        this.state.pauseStartTime = 0;
+      }
+    }
   }
 
   endGame() {
@@ -136,7 +149,13 @@ export class GameState {
   // Update current game time
   updateElapsedTime() {
     if (this.state.gameStarted) {
-      this.state.elapsedTime = Date.now() - this.state.startTime;
+      if (this.state.gamePaused) {
+        // While paused, don't update elapsed time, but still return current value
+        return this.state.elapsedTime;
+      } else {
+        // When active, subtract the total paused time from the calculation
+        this.state.elapsedTime = Date.now() - this.state.startTime - this.state.pausedTime;
+      }
     }
     return this.state.elapsedTime;
   }
@@ -196,6 +215,8 @@ export class GameState {
     this.state.gamePaused = false;
     this.state.startTime = Date.now();
     this.state.elapsedTime = 0;
+    this.state.pausedTime = 0;      // Reset paused time tracking
+    this.state.pauseStartTime = 0;  // Reset pause start timestamp
     this.state.currentObjective = 0;
     this.state.objectiveTimer = 0;
     // Don't reset difficulty as that should persist

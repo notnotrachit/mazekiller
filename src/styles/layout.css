@@ -311,7 +311,8 @@
 .minimap-legend {
   margin-top: 8px;
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  justify-content: space-around;
   font-family: var(--font-secondary);
   font-size: 9px;
   color: var(--text-color);
@@ -322,7 +323,9 @@
 .minimap-legend div {
   display: flex;
   align-items: center;
-  margin-right: 5px;
+  margin-right: 8px;
+  margin-bottom: 4px;
+  min-width: 45px;
 }
 
 .minimap-legend span {
