@@ -50,11 +50,11 @@ export class StoryManager {
       ],
     };
 
-    // Define the intro cinematic sequence
+    // Define the intro cinematic sequence with new Maze Runner themed images
     this.introCinematicSequence = [
       {
         type: "background",
-        backgroundImage: "url('/src/assets/lab-explosion.jpg')",
+        backgroundImage: "url('/src/assets/3.png')", // Lab breach image
         duration: 5000,
         title: "WCKD Research Facility",
         subtitle: "Three Days Ago",
@@ -64,7 +64,7 @@ export class StoryManager {
       },
       {
         type: "dialogue",
-        backgroundImage: "url('/src/assets/lab-interior.jpg')",
+        backgroundImage: "url('/src/assets/2.png')", // The Glade/Research Facility
         duration: 6000,
         title: "",
         subtitle: "",
@@ -75,7 +75,7 @@ export class StoryManager {
       },
       {
         type: "dialogue",
-        backgroundImage: "url('/src/assets/scientist-closeup.jpg')",
+        backgroundImage: "url('/src/assets/3.png')", // Laboratory Breach image
         duration: 6000,
         title: "",
         subtitle: "",
@@ -86,7 +86,7 @@ export class StoryManager {
       },
       {
         type: "background",
-        backgroundImage: "url('/src/assets/test-subject.jpg')",
+        backgroundImage: "url('/src/assets/1.png')", // Infected Protagonist image
         duration: 5000,
         title: "",
         subtitle: "",
@@ -96,7 +96,7 @@ export class StoryManager {
       },
       {
         type: "dialogue",
-        backgroundImage: "url('/src/assets/security-officer.jpg')",
+        backgroundImage: "url('/src/assets/8.png')", // Security Officer image
         duration: 6000,
         title: "",
         subtitle: "",
@@ -107,7 +107,7 @@ export class StoryManager {
       },
       {
         type: "memory",
-        backgroundImage: "url('/src/assets/maze-entrance.jpg')",
+        backgroundImage: "url('/src/assets/4.png')", // Maze Entrance image
         duration: 7000,
         title: "Present Day",
         subtitle: "",
@@ -118,7 +118,7 @@ export class StoryManager {
       },
       {
         type: "dialogue",
-        backgroundImage: "url('/src/assets/player-pov.jpg')",
+        backgroundImage: "url('/src/assets/1.png')", // Infected Protagonist image (first-person)
         duration: 5000,
         title: "",
         subtitle: "",
@@ -129,7 +129,7 @@ export class StoryManager {
       },
       {
         type: "background",
-        backgroundImage: "url('/src/assets/griever-shadow.jpg')",
+        backgroundImage: "url('/src/assets/5.png')", // Griever image
         duration: 6000,
         title: "",
         subtitle: "",
@@ -140,7 +140,7 @@ export class StoryManager {
       },
       {
         type: "finale",
-        backgroundImage: "url('/src/assets/maze-aerial.jpg')",
+        backgroundImage: "url('/src/assets/10.png')", // Maze Aerial View
         duration: 5000,
         title: "THE MAZE",
         subtitle: "Find the serum. Escape the facility. Survive.",
@@ -579,7 +579,7 @@ export class StoryManager {
       this.cinematicSequence = [
         {
           type: "background",
-          backgroundImage: "url('/src/assets/revelation.jpg')",
+          backgroundImage: "url('/src/assets/7.png')", // Memory Flashback image
           duration: 1000,
           title: "",
           subtitle: "",
@@ -588,7 +588,7 @@ export class StoryManager {
         },
         {
           type: "dialogue",
-          backgroundImage: "url('/src/assets/revelation.jpg')",
+          backgroundImage: "url('/src/assets/7.png')", // Memory Flashback image
           duration: 7000,
           title: "",
           subtitle: "",
@@ -599,7 +599,7 @@ export class StoryManager {
         },
         {
           type: "dialogue",
-          backgroundImage: "url('/src/assets/infection_closeup.jpg')",
+          backgroundImage: "url('/src/assets/1.png')", // Infected Protagonist image
           duration: 6000,
           title: "",
           subtitle: "",
@@ -626,7 +626,7 @@ export class StoryManager {
       this.cinematicSequence = [
         {
           type: "background",
-          backgroundImage: "url('/src/assets/final_stage.jpg')",
+          backgroundImage: "url('/src/assets/6.png')", // Serum Vial image
           duration: 1000,
           title: "",
           subtitle: "",
@@ -635,7 +635,7 @@ export class StoryManager {
         },
         {
           type: "dialogue",
-          backgroundImage: "url('/src/assets/final_stage.jpg')",
+          backgroundImage: "url('/src/assets/7.png')", // Memory Flashback image
           duration: 7000,
           title: "",
           subtitle: "",
@@ -646,7 +646,7 @@ export class StoryManager {
         },
         {
           type: "dialogue",
-          backgroundImage: "url('/src/assets/exit_portal.jpg')",
+          backgroundImage: "url('/src/assets/9.png')", // Exit Portal image
           duration: 6000,
           title: "",
           subtitle: "",
