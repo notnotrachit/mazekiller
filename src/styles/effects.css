@@ -106,6 +106,164 @@
   to { opacity: 0; }
 }
 
+/* Digital Display Flicker Effect */
+@keyframes digital-flicker {
+  0%, 100% { opacity: 1; }
+  8% { opacity: 0.91; }
+  12% { opacity: 0.98; }
+  26% { opacity: 0.94; }
+  40% { opacity: 1; }
+  58% { opacity: 0.95; }
+  72% { opacity: 0.98; }
+  92% { opacity: 0.93; }
+}
+
+/* Holograms Effect Animation */
+@keyframes hologram-flicker {
+  0%, 100% { opacity: 1; }
+  25% { opacity: 0.85; }
+  50% { opacity: 0.95; }
+  75% { opacity: 0.9; }
+}
+
+/* Data Stream Animation */
+@keyframes data-flow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+/* Scanner Animation */
+@keyframes scanner {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* Circuit Pulse Animation */
+@keyframes circuit-pulse {
+  0%, 100% { box-shadow: 0 0 10px var(--primary-color); }
+  50% { box-shadow: 0 0 20px var(--primary-color); }
+}
+
+/* Maze Border Animation */
+@keyframes maze-border {
+  0%, 100% { 
+    box-shadow: inset 0 0 15px var(--primary-color); 
+    border-color: rgba(0, 179, 230, 0.6);
+  }
+  50% { 
+    box-shadow: inset 0 0 25px var(--primary-color); 
+    border-color: rgba(0, 179, 230, 0.8);
+  }
+}
+
+/* WCKD Tech Scan Effect */
+@keyframes wckd-scan {
+  0% {
+    transform: translateY(-100%) translateX(-50%);
+    height: 2px;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(100%) translateX(-50%);
+    height: 2px;
+    opacity: 0;
+  }
+}
+
+/* Griever Alert Animation */
+@keyframes griever-alert {
+  0%, 100% { 
+    box-shadow: 0 0 15px rgba(255, 82, 82, 0.7); 
+    background-color: rgba(255, 82, 82, 0.2);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(255, 82, 82, 0.9); 
+    background-color: rgba(255, 82, 82, 0.3);
+  }
+}
+
+/* Serum Glow Animation */
+@keyframes serum-glow {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(60, 177, 60, 0.7)); }
+  50% { filter: drop-shadow(0 0 12px rgba(60, 177, 60, 0.9)); }
+}
+
+/* Memory Flash Animation */
+@keyframes memory-flash {
+  0% { 
+    background-color: rgba(255, 255, 255, 0); 
+    backdrop-filter: blur(0px) saturate(1) brightness(1);
+  }
+  10% { 
+    background-color: rgba(255, 255, 255, 0.7); 
+    backdrop-filter: blur(5px) saturate(1.2) brightness(1.5);
+  }
+  20% { 
+    background-color: rgba(255, 255, 255, 0.4); 
+    backdrop-filter: blur(3px) saturate(1.1) brightness(1.2);
+  }
+  100% { 
+    background-color: rgba(255, 255, 255, 0); 
+    backdrop-filter: blur(0px) saturate(1) brightness(1);
+  }
+}
+
+/* Time Warning Animation */
+@keyframes time-warning {
+  0%, 100% { color: var(--warning-color); text-shadow: 0 0 8px rgba(255, 183, 3, 0.7); }
+  50% { color: var(--text-color); text-shadow: 0 0 0 rgba(255, 183, 3, 0); }
+}
+
+/* Critical Alert Animation */
+@keyframes critical-alert {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Infection Pulse Animation */
+@keyframes infection-pulse {
+  0%, 100% { 
+    background-color: rgba(255, 82, 82, 0.2); 
+    box-shadow: 0 0 10px rgba(255, 82, 82, 0.5);
+  }
+  50% { 
+    background-color: rgba(255, 82, 82, 0.3); 
+    box-shadow: 0 0 20px rgba(255, 82, 82, 0.7);
+  }
+}
+
+/* Severe Vignette Pulsing - Used when player is severely infected */
+@keyframes vignette-pulse {
+  0%, 100% {
+    box-shadow: inset 0 0 100px rgba(255, 82, 82, 0.3);
+  }
+  50% {
+    box-shadow: inset 0 0 150px rgba(255, 82, 82, 0.5);
+  }
+}
+
+/* Digital Display Animation */
+@keyframes digital-refresh {
+  0% { opacity: 0.95; transform: scale(1.01); }
+  5% { opacity: 1; transform: scale(1); }
+  95% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0.95; transform: scale(1.01); }
+}
+
+/* Data Processing Animation */
+@keyframes data-process {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 0%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Typewriter Effect */
 @keyframes typewriterEffect {
   from {
     opacity: 0;
@@ -120,6 +278,7 @@
   }
 }
 
+/* Voice Wave Animation */
 @keyframes voiceWave {
   0%, 100% {
     transform: scaleY(0.5);
@@ -129,32 +288,22 @@
   }
 }
 
+/* Cinematic Pulse Animation */
 @keyframes cinematicPulse {
   0% { filter: brightness(1); }
   50% { filter: brightness(1.3); }
   100% { filter: brightness(1); }
 }
 
-@keyframes memoryFlash {
-  0% { 
-    background-color: rgba(255, 255, 255, 0); 
-    backdrop-filter: blur(0px) saturate(1) brightness(1);
+/* Heartbeat animation for infection overlay */
+@keyframes heartbeat {
+  0%, 100% { 
+    opacity: 0.6; 
+    transform: scale(1);
   }
-  10% { 
-    background-color: rgba(255, 255, 255, var(--memory-flash-intensity)); 
-    backdrop-filter: blur(5px) saturate(var(--memory-flash-saturation)) brightness(1.2);
-  }
-  20% { 
-    background-color: rgba(255, 255, 255, calc(var(--memory-flash-intensity) * 0.7)); 
-    backdrop-filter: blur(3px) saturate(calc(var(--memory-flash-saturation) * 0.9)) brightness(1.1);
-  }
-  30% { 
-    background-color: rgba(255, 255, 255, calc(var(--memory-flash-intensity) * 0.9)); 
-    backdrop-filter: blur(6px) saturate(var(--memory-flash-saturation)) brightness(1.15);
-  }
-  100% { 
-    background-color: rgba(255, 255, 255, 0); 
-    backdrop-filter: blur(0px) saturate(1) brightness(1);
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1.02);
   }
 }
 
@@ -197,16 +346,214 @@
   100% { opacity: 1; filter: brightness(1) blur(0); }
 }
 
-/* Heartbeat animation for infection overlay */
-@keyframes heartbeat {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
+/* Reusable Effect Classes */
+
+/* Digital display effects */
+.digital-display {
+  animation: digital-flicker 3s infinite;
+  position: relative;
 }
 
-/* Flash animation for time warning */
-@keyframes timeWarning {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+.digital-display::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 179, 230, 0.03) 2px,
+    rgba(0, 179, 230, 0.03) 4px
+  );
+  pointer-events: none;
+}
+
+/* Hologram effect for UI elements */
+.hologram {
+  position: relative;
+  border: 1px solid rgba(0, 179, 230, 0.5);
+  box-shadow: 0 0 15px rgba(0, 179, 230, 0.3);
+  animation: hologram-flicker 4s infinite;
+  overflow: hidden;
+}
+
+.hologram::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 179, 230, 0.05) 2px,
+    rgba(0, 179, 230, 0.05) 4px
+  );
+  pointer-events: none;
+}
+
+/* Scanner line effect */
+.scanner-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanner-line::before {
+  content: '';
+  position: absolute;
+  top: -150%;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0, 179, 230, 0.2),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: scanner 3s linear infinite;
+  pointer-events: none;
+}
+
+/* Data stream background */
+.data-stream {
+  position: relative;
+}
+
+.data-stream::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 179, 230, 0.1) 25%,
+    rgba(0, 179, 230, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: data-flow 3s linear infinite;
+  pointer-events: none;
+}
+
+/* Circuit pulse border */
+.circuit-border {
+  border: 1px solid var(--primary-color);
+  animation: circuit-pulse 2s infinite;
+  position: relative;
+}
+
+.circuit-border::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(90deg, transparent 98%, var(--primary-color) 100%),
+    linear-gradient(0deg, transparent 98%, var(--primary-color) 100%);
+  background-size: 20px 20px;
+  background-position: 0px 0px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Griever alert effect */
+.griever-alert {
+  animation: griever-alert 1s infinite;
+  position: relative;
+}
+
+.griever-alert::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 82, 82, 0.1) 10px,
+    rgba(255, 82, 82, 0.1) 20px
+  );
+  pointer-events: none;
+}
+
+/* Vignette overlay for infection status */
+.infection-vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 900;
+  animation: vignette-pulse 4s infinite ease-in-out;
+}
+
+/* Time warning flash */
+.time-warning {
+  animation: time-warning 1s infinite;
+}
+
+/* Critical alert effect */
+.critical-alert {
+  animation: critical-alert 0.5s infinite;
+  color: var(--danger-color);
+  text-shadow: 0 0 10px rgba(255, 82, 82, 0.8);
+}
+
+/* Maze Border animation */
+.maze-border {
+  border: 2px solid rgba(0, 179, 230, 0.6);
+  animation: maze-border 3s infinite;
+}
+
+/* WCKD scan line */
+.wckd-scan {
+  position: relative;
+}
+
+.wckd-scan::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100%;
+  background: linear-gradient(to bottom, 
+    transparent, 
+    rgba(0, 179, 230, 0.7), 
+    transparent
+  );
+  animation: wckd-scan 3s linear infinite;
+  pointer-events: none;
+}
+
+/* Serum glow effect */
+.serum-glow {
+  animation: serum-glow 2s infinite;
+}
+
+/* Memory flash overlay */
+.memory-flash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  pointer-events: none;
+  animation: memory-flash 1.5s ease-out forwards;
 }

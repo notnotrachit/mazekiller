@@ -23,15 +23,15 @@ export class GameWorld {
     this.textureLoader.crossOrigin = "anonymous";
 
     // Time of day settings - changed to start in evening
-    this.isDaytime = false;
-    this.timeOfDay = 0.4; // Evening setting (between day and night)
+    this.isDaytime = true;
+    this.timeOfDay = 0.2; // Evening setting (between day and night)
     this.dayDuration = 300; // 5 minutes of game time = 1 day
     this.dayStartTime = Date.now();
 
     // Weather effects
-    this.isRaining = false;
+    this.isRaining = true;
     this.fogDensity = 0.08; // Slightly increased fog for evening ambiance
-    this.rainIntensity = 0;
+    this.rainIntensity = 0.5;
 
     // Environment objects
     this.trees = [];
@@ -55,7 +55,7 @@ export class GameWorld {
     this.scene.fog = new THREE.FogExp2(0x080808, this.fogDensity);
 
     // Add global ambient light for better visibility
-    this.globalAmbient = new THREE.AmbientLight(0xafc3c7, 0.4);
+    this.globalAmbient = new THREE.AmbientLight(0xafc3c7, 0.8);
     this.scene.add(this.globalAmbient);
 
     // Create ground
