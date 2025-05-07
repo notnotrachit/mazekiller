@@ -9,6 +9,7 @@ import { InputManager } from "./InputManager.js";
 import { Player } from "../components/Player.js";
 import { GameWorld } from "../components/GameWorld.js";
 import { SoundManager } from "../components/SoundManager.js";
+import { StoryManager } from "../components/StoryManager.js";
 import { Collectibles } from "../components/Collectibles.js";
 import { Griever } from "../components/Griever.js";
 import { EntityManager } from "./EntityManager.js";
@@ -46,6 +47,10 @@ export class Game {
 
     // Minimap
     this.minimapEnabled = false;
+
+    // Game mode flags
+    this.cinematicsShown = false;
+    this.introPlayed = false;
   }
 
   // Initialize the game and all components
@@ -70,6 +75,10 @@ export class Game {
       console.error("Failed to initialize sound manager:", error);
       this.soundManager = null;
     }
+
+    // Initialize story manager
+    this.storyManager = new StoryManager(this.soundManager);
+    this.storyManager.initialize();
 
     // Initialize game world
     this.gameWorld = new GameWorld(this.scene, this.loadingManager);
@@ -96,13 +105,17 @@ export class Game {
 
     // Initialize collectibles
     this.collectibles = new Collectibles(this.scene, this.soundManager);
+
+    // Create story notes from the StoryManager content
+    const storyNotes = this.storyManager.getStoryNotes();
     this.collectibles.createStoryNotes(
       this.generateRandomPositions(
-        8,
+        storyNotes.length,
         this.gameWorld.maze,
         this.gameWorld.mazeSize,
         this.gameWorld.cellSize
-      )
+      ),
+      storyNotes
     );
 
     // Set up event handlers
@@ -115,6 +128,11 @@ export class Game {
       onToggleMinimap: () => this.toggleMinimap(),
     });
 
+    // Set up cinematic completion event
+    document.addEventListener("cinematicsComplete", () => {
+      this.onCinematicsComplete();
+    });
+
     // Start animation loop
     this.lastTime = performance.now();
     this.animate();
@@ -123,6 +141,41 @@ export class Game {
     window.addEventListener("resize", () => this.handleResize());
 
     return this;
+  }
+
+  // Called when cinematics complete
+  onCinematicsComplete() {
+    this.cinematicsShown = true;
+
+    // Display first objective notification
+    setTimeout(() => {
+      this.storyManager.showObjectiveNotification(
+        "Find serum vials to slow the infection"
+      );
+    }, 1000);
+
+    // Unlock controls first to ensure the player can interact with the UI
+    if (this.player) {
+      this.player.unlock();
+
+      // Focus canvas and lock controls after a short delay to allow button interaction
+      setTimeout(() => {
+        this.renderer.getCanvas().focus();
+        this.player.lock();
+
+        // Add grievers based on difficulty
+        this.entityManager.addGrievers(this.gameState.difficulty);
+
+        // Play ambient music
+        if (this.soundManager) {
+          this.soundManager.playMusic("main");
+          this.soundManager.fadeInAmbient("wind", 0.5);
+        }
+      }, 500);
+    }
+
+    // Resume the game state
+    this.gameState.resumeGame();
   }
 
   // Handle window resize
@@ -313,6 +366,22 @@ export class Game {
   startGame() {
     this.ui.startGameUI();
 
+    // If we haven't shown the cinematics and this is first start, show them
+    if (!this.cinematicsShown && !this.introPlayed) {
+      this.introPlayed = true;
+
+      // Pause the game state until cinematics are done
+      this.gameState.pauseGame();
+
+      // Start cinematics after a brief delay
+      setTimeout(() => {
+        // Start the cinematic sequence - using the correct method name
+        this.storyManager.startIntroCinematic();
+      }, 1000);
+
+      return;
+    }
+
     // Ensure the DOM element has focus
     this.renderer.getCanvas().focus();
     console.log("Game started, canvas focused");
@@ -328,6 +397,9 @@ export class Game {
       this.soundManager.playMusic("main");
       this.soundManager.fadeInAmbient("wind", 0.5);
     }
+
+    // Start game time tracking
+    this.gameState.startGame();
   }
 
   // Resume the game
@@ -386,6 +458,8 @@ export class Game {
 
   // Handle escape key
   handleEscapeKey() {
+    // If cinematic is active, it will handle its own ESC key
+
     if (this.gameState.gameStarted && !this.gameState.gameOver) {
       if (this.gameState.gamePaused) {
         this.resumeGame();
@@ -405,6 +479,14 @@ export class Game {
     if (collectedItems.note) {
       this.gameState.incrementNotes();
       this.showStoryNote(collectedItems.note);
+
+      // Show story reveal effect
+      if (this.soundManager) {
+        this.soundManager.playSfx("story_reveal");
+      }
+
+      // Add memory flashback effect for note collection
+      this.storyManager.triggerMemoryFlashback();
     }
   }
 
@@ -635,6 +717,15 @@ export class Game {
         if (this.gameWorld.checkKeyCollection(playerPosition)) {
           this.gameState.incrementSerum();
           this.ui.updateSerumCountDisplay();
+
+          // Show new objective notification when collecting first serum
+          if (this.gameState.serumCollected === 1) {
+            setTimeout(() => {
+              this.storyManager.showObjectiveNotification(
+                "Collect 3 serum vials to activate the exit portal"
+              );
+            }, 2000);
+          }
 
           // Slow infection when collecting serum
           this.player.reduceInfection(15);

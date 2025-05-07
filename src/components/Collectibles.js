@@ -13,7 +13,7 @@ export class Collectibles {
     this.noteCollectionQueue = [];
     this.noteCollectionParticles = [];
 
-    // Story note content
+    // Default story note content (will be overridden by StoryManager content)
     this.noteContent = [
       {
         title: "Lab Report #437-A",
@@ -58,7 +58,7 @@ export class Collectibles {
     ];
   }
 
-  createStoryNotes(positions) {
+  createStoryNotes(positions, customNotes = null) {
     // Clear existing notes
     this.storyNotes.forEach((note) => {
       if (note.mesh) {
@@ -67,17 +67,23 @@ export class Collectibles {
     });
     this.storyNotes = [];
 
+    // Use custom notes from StoryManager if provided
+    const noteContent = customNotes || this.noteContent;
+
     // Create story notes at provided positions
     positions.forEach((position, index) => {
-      // Create note mesh
-      const note = this.createNoteMesh(position);
+      // Create note mesh with appropriate visual indicator based on content
+      const note = this.createNoteMesh(
+        position,
+        noteContent[index % noteContent.length]
+      );
 
       // Store note data
       this.storyNotes.push({
         mesh: note,
         position: position,
         collected: false,
-        content: this.noteContent[index % this.noteContent.length],
+        content: noteContent[index % noteContent.length],
         id: index,
       });
 
@@ -86,14 +92,45 @@ export class Collectibles {
     });
   }
 
-  createNoteMesh(position) {
+  createNoteMesh(position, noteContent) {
     // Create group for note
     const noteGroup = new THREE.Group();
+
+    // Determine note type and appearance based on content
+    let paperColor, logoColor, lightColor;
+
+    // Customize appearance based on note title/content
+    if (
+      noteContent.title.includes("Medical") ||
+      noteContent.title.includes("Lab Report")
+    ) {
+      paperColor = 0xf0f0f0; // White medical paper
+      logoColor = 0x2277cc; // Medical blue
+      lightColor = 0xaaddff; // Bluish glow
+    } else if (
+      noteContent.title.includes("Security") ||
+      noteContent.title.includes("WCKD Memo")
+    ) {
+      paperColor = 0xffdddd; // Light red for security/warnings
+      logoColor = 0xcc2200; // Warning red
+      lightColor = 0xffaaaa; // Red glow
+    } else if (
+      noteContent.title.includes("Message") ||
+      noteContent.content.includes("Journal")
+    ) {
+      paperColor = 0xf5f5dc; // Beige for personal notes
+      logoColor = 0x555555; // Darker ink
+      lightColor = 0xffffaa; // Warm glow
+    } else {
+      paperColor = 0xf5f5dc; // Default beige
+      logoColor = 0x058ed9; // Default WCKD blue
+      lightColor = 0xffffaa; // Default glow
+    }
 
     // Paper
     const paperGeometry = new THREE.BoxGeometry(0.5, 0.02, 0.7);
     const paperMaterial = new THREE.MeshStandardMaterial({
-      color: 0xf5f5dc, // Beige paper color
+      color: paperColor,
       roughness: 0.9,
       metalness: 0.1,
     });
@@ -109,18 +146,28 @@ export class Collectibles {
       metalness: 0,
     });
 
+    // Vary line pattern based on note type
+    const lineCount = noteContent.title.includes("Report") ? 8 : 6;
+    const lineSpacing = 0.6 / lineCount;
+
     // Add several lines of "text"
-    for (let i = 0; i < 6; i++) {
-      const line = new THREE.Mesh(lineGeometry, lineMaterial);
+    for (let i = 0; i < lineCount; i++) {
+      // Create lines of different lengths for visual variety
+      const lineWidth = 0.2 + Math.random() * 0.2;
+      const customLineGeometry = new THREE.BoxGeometry(lineWidth, 0.01, 0.03);
+
+      const line = new THREE.Mesh(customLineGeometry, lineMaterial);
       line.position.y = 0.015;
-      line.position.z = -0.25 + i * 0.1;
+      line.position.z = -0.25 + i * lineSpacing;
+      // Align to left side with some variance
+      line.position.x = -0.15 + Math.random() * 0.05;
       noteGroup.add(line);
     }
 
-    // WCKD logo (simplified)
+    // WCKD logo or identifier
     const logoGeometry = new THREE.CircleGeometry(0.08, 16);
     const logoMaterial = new THREE.MeshStandardMaterial({
-      color: 0x058ed9, // WCKD blue
+      color: logoColor,
       roughness: 0.5,
       metalness: 0.5,
     });
@@ -133,7 +180,7 @@ export class Collectibles {
     noteGroup.add(logo);
 
     // Add subtle glow
-    const noteLight = new THREE.PointLight(0xffffaa, 0.5, 2);
+    const noteLight = new THREE.PointLight(lightColor, 0.5, 2);
     noteLight.position.set(0, 0.2, 0);
     noteGroup.add(noteLight);
 
@@ -198,6 +245,15 @@ export class Collectibles {
 
           // Slow rotation - use delta to ensure smooth animation regardless of framerate
           note.mesh.rotation.y += delta * note.mesh.userData.rotationSpeed;
+
+          // Add a pulse effect to the light if there's one
+          const lights = note.mesh.children.filter(
+            (child) => child instanceof THREE.PointLight
+          );
+          if (lights.length > 0) {
+            const pulseFactor = (Math.sin(time * 2) + 1) * 0.5; // 0 to 1 pulsing
+            lights[0].intensity = 0.3 + pulseFactor * 0.4;
+          }
         }
       }
     });
@@ -250,7 +306,7 @@ export class Collectibles {
             // Play sound using a small timeout to avoid performance impact
             if (this.soundManager) {
               setTimeout(() => {
-                this.soundManager.play("collectNote");
+                this.soundManager.play("note_open");
               }, 10);
             }
 
@@ -283,27 +339,45 @@ export class Collectibles {
     // Create a simple particle effect at the collection point
     if (effect.note && effect.note.position) {
       // PERFORMANCE IMPROVEMENT: Reduce particle count even further for third serum
-      const particleCount = this.noteCollectionQueue.length <= 2 ? 10 : 5;
+      const particleCount = this.noteCollectionQueue.length <= 2 ? 15 : 8;
       const particleGeometry = new THREE.BufferGeometry();
+
+      // Determine particle color based on note content
+      let particleColor;
+      if (
+        effect.note.content.title.includes("Medical") ||
+        effect.note.content.title.includes("Lab")
+      ) {
+        particleColor = 0x44aaff; // Blue particles for medical notes
+      } else if (
+        effect.note.content.title.includes("Security") ||
+        effect.note.content.title.includes("WCKD")
+      ) {
+        particleColor = 0xff4444; // Red particles for security notes
+      } else {
+        particleColor = 0xffee44; // Yellow-ish particles for personal notes
+      }
+
       const particleMaterial = new THREE.PointsMaterial({
-        color: 0xffee44, // Yellow-ish particles for notes
+        color: particleColor,
         size: 0.08,
         transparent: true,
         opacity: 0.7,
         blending: THREE.AdditiveBlending,
       });
 
-      // Create particles in a disc shape (flat on paper)
+      // Create particles in a spiral pattern
       const particlePositions = new Float32Array(particleCount * 3);
 
       for (let i = 0; i < particleCount; i++) {
-        // Random position in a disc
-        const radius = 0.2 + Math.random() * 0.3;
-        const angle = Math.random() * Math.PI * 2;
+        // Spiral upward pattern
+        const radius = 0.2 + (i / particleCount) * 0.3;
+        const angle = (i / particleCount) * Math.PI * 4;
+        const height = (i / particleCount) * 0.8;
 
         particlePositions[i * 3] =
           effect.note.position.x + radius * Math.cos(angle);
-        particlePositions[i * 3 + 1] = effect.note.position.y + 0.2; // Just above ground
+        particlePositions[i * 3 + 1] = effect.note.position.y + 0.2 + height;
         particlePositions[i * 3 + 2] =
           effect.note.position.z + radius * Math.sin(angle);
       }
@@ -317,7 +391,7 @@ export class Collectibles {
       const particles = new THREE.Points(particleGeometry, particleMaterial);
       particles.userData = {
         creationTime: Date.now(),
-        lifetime: 800, // Shorter lifetime for note particles
+        lifetime: 1200, // Longer lifetime for more dramatic effect
       };
 
       // Add temporary particles to scene
@@ -344,6 +418,17 @@ export class Collectibles {
         item.mesh.visible = true;
       }
     });
+
+    // Clear any pending effects
+    this.noteCollectionQueue = [];
+
+    // Clear any existing particle effects
+    this.noteCollectionParticles.forEach((particles) => {
+      this.scene.remove(particles);
+      if (particles.geometry) particles.geometry.dispose();
+      if (particles.material) particles.material.dispose();
+    });
+    this.noteCollectionParticles = [];
   }
 
   // Get positions of uncollected notes for minimap

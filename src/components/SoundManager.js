@@ -11,12 +11,14 @@ export class SoundManager {
     this.sounds = {};
     this.music = {};
     this.ambientSounds = {};
+    this.cinematicSounds = {}; // New container for cinematic sounds
 
     // Global volume settings
     this.masterVolume = 1.0;
     this.musicVolume = 0.5;
     this.sfxVolume = 0.8;
     this.ambientVolume = 0.6;
+    this.narrativeVolume = 0.9; // New volume control for narrative audio
 
     // Error handling
     this.loadErrors = false;
@@ -42,6 +44,8 @@ export class SoundManager {
       this.loadSounds();
       this.loadMusic();
       this.loadAmbientSounds();
+      this.loadSfx();
+      this.loadCinematicSounds(); // New method for cinematic sounds
 
       this.initialized = true;
     } catch (error) {
@@ -90,6 +94,14 @@ export class SoundManager {
       "victory",
       "heartbeat",
       "collectMedkit",
+      // Add fallbacks for cinematic sounds
+      "intro_maze",
+      "intro_drpaige",
+      "intro_infection",
+      "intro_mission",
+      "memory_flash",
+      "objective",
+      "story_reveal",
     ];
 
     requiredSounds.forEach((sound) => {
@@ -97,7 +109,7 @@ export class SoundManager {
     });
 
     // Create minimal required music
-    const requiredMusic = ["main", "chase", "menu"];
+    const requiredMusic = ["main", "chase", "menu", "cinematic"];
     requiredMusic.forEach((track) => {
       this.music[track] = silentHowl;
     });
@@ -106,6 +118,21 @@ export class SoundManager {
     const requiredAmbient = ["wind", "night", "rain", "thunder"];
     requiredAmbient.forEach((ambient) => {
       this.ambientSounds[ambient] = silentHowl;
+    });
+
+    // Create minimal required cinematic sounds
+    const requiredCinematic = [
+      "intro_maze",
+      "intro_drpaige",
+      "intro_infection",
+      "intro_mission",
+      "memory_flash",
+      "objective",
+    ];
+
+    this.cinematicSounds = {};
+    requiredCinematic.forEach((cinematic) => {
+      this.cinematicSounds[cinematic] = silentHowl;
     });
   }
 
@@ -285,7 +312,143 @@ export class SoundManager {
     });
   }
 
-  // Create a silent sound object that won't throw errors
+  loadSfx() {
+    // Define sound effects with error handling
+    const sfxDefinitions = {
+      // Existing sound effects
+      collect: { url: "assets/sfx/collect.mp3", volume: 0.7 },
+      step: { url: "assets/sfx/step.mp3", volume: 0.3 },
+      jump: { url: "assets/sfx/jump.mp3", volume: 0.5 },
+      land: { url: "assets/sfx/land.mp3", volume: 0.5 },
+      hurt: { url: "assets/sfx/hurt.mp3", volume: 0.7 },
+      death: { url: "assets/sfx/death.mp3", volume: 1.0 },
+      error: { url: "assets/sfx/error.mp3", volume: 0.5 },
+      menu_open: { url: "assets/sfx/menu_open.mp3", volume: 0.5 },
+      menu_close: { url: "assets/sfx/menu_close.mp3", volume: 0.5 },
+      button: { url: "assets/sfx/button.mp3", volume: 0.5 },
+      note_open: { url: "assets/sfx/note_open.mp3", volume: 0.5 },
+      note_close: { url: "assets/sfx/note_close.mp3", volume: 0.5 },
+      griever_nearby: { url: "assets/sfx/griever_nearby.mp3", volume: 0.7 },
+      griever_attack: { url: "assets/sfx/griever_attack.mp3", volume: 0.8 },
+      portal: { url: "assets/sfx/portal.mp3", volume: 0.7 },
+      wall_move: { url: "assets/sfx/wall_move.mp3", volume: 0.6 },
+      infection_pulse: { url: "assets/sfx/infection_pulse.mp3", volume: 0.5 },
+
+      // New cinematic/story sound effects
+      intro_drpaige: { url: "assets/sfx/intro_drpaige.mp3", volume: 0.9 },
+      intro_maze: { url: "assets/sfx/intro_maze.mp3", volume: 0.9 },
+      intro_infection: { url: "assets/sfx/intro_infection.mp3", volume: 0.9 },
+      intro_mission: { url: "assets/sfx/intro_mission.mp3", volume: 0.9 },
+      memory_flash: { url: "assets/sfx/memory_flash.mp3", volume: 0.8 },
+      objective: { url: "assets/sfx/objective.mp3", volume: 0.7 },
+      story_reveal: { url: "assets/sfx/story_reveal.mp3", volume: 0.8 },
+      cinematic_transition: {
+        url: "assets/sfx/cinematic_transition.mp3",
+        volume: 0.7,
+      },
+    };
+
+    // Try to load each sound effect with error handling
+    Object.entries(sfxDefinitions).forEach(([key, def]) => {
+      try {
+        // Track this load with the loading manager
+        if (this.loadingManager) {
+          this.loadingManager.itemStart(def.url);
+        }
+
+        this.sounds[key] = new Howl({
+          src: [def.url],
+          volume: def.volume * this.sfxVolume,
+          loop: def.loop || false,
+          rate: def.rate || 1.0,
+          onload: () => {
+            if (this.loadingManager) {
+              this.loadingManager.itemEnd(def.url);
+            }
+          },
+          onloaderror: (id, error) => {
+            console.warn(`Failed to load sound effect: ${key}`, error);
+            // Create silent fallback
+            this.sounds[key] = this.createSilentSound();
+            if (this.loadingManager) {
+              this.loadingManager.itemError(def.url);
+            }
+          },
+        });
+      } catch (error) {
+        console.error(`Error creating sound effect ${key}:`, error);
+        this.sounds[key] = this.createSilentSound();
+        if (this.loadingManager) {
+          this.loadingManager.itemError(def.url);
+        }
+      }
+    });
+  }
+
+  // New method to load cinematic sounds
+  loadCinematicSounds() {
+    // Define cinematic sounds with error handling
+    const cinematicDefinitions = {
+      // Cinematic narrative voiceovers
+      intro_maze: { url: "assets/narrative/intro_maze.mp3", volume: 1.0 },
+      intro_drpaige: { url: "assets/narrative/intro_drpaige.mp3", volume: 1.0 },
+      intro_infection: {
+        url: "assets/narrative/intro_infection.mp3",
+        volume: 1.0,
+      },
+      intro_mission: { url: "assets/narrative/intro_mission.mp3", volume: 1.0 },
+      memory_flash: { url: "assets/narrative/memory_flash.mp3", volume: 0.9 },
+      objective: { url: "assets/narrative/objective.mp3", volume: 0.9 },
+
+      // Cinematic music - used during story sequences
+      cinematic_main: {
+        url: "assets/music/cinematic_main.mp3",
+        volume: 0.7,
+        loop: true,
+      },
+
+      // Transition sounds
+      transition_in: { url: "assets/sfx/transition_in.mp3", volume: 0.8 },
+      transition_out: { url: "assets/sfx/transition_out.mp3", volume: 0.8 },
+    };
+
+    // Try to load each cinematic sound with error handling
+    Object.entries(cinematicDefinitions).forEach(([key, def]) => {
+      try {
+        // Track this load with the loading manager
+        if (this.loadingManager) {
+          this.loadingManager.itemStart(def.url);
+        }
+
+        this.cinematicSounds[key] = new Howl({
+          src: [def.url],
+          volume: def.volume * this.narrativeVolume,
+          loop: def.loop || false,
+          onload: () => {
+            if (this.loadingManager) {
+              this.loadingManager.itemEnd(def.url);
+            }
+          },
+          onloaderror: (id, error) => {
+            console.warn(`Failed to load cinematic sound: ${key}`, error);
+            // Create silent fallback
+            this.cinematicSounds[key] = this.createSilentSound();
+            if (this.loadingManager) {
+              this.loadingManager.itemError(def.url);
+            }
+          },
+        });
+      } catch (error) {
+        console.error(`Error creating cinematic sound ${key}:`, error);
+        this.cinematicSounds[key] = this.createSilentSound();
+        if (this.loadingManager) {
+          this.loadingManager.itemError(def.url);
+        }
+      }
+    });
+  }
+
+  // Create a silent sound as a fallback
   createSilentSound() {
     return {
       play: () => {
@@ -341,9 +504,53 @@ export class SoundManager {
     return null;
   }
 
+  // New method to play cinematic sound effects
+  playSfx(soundName, rate = 1.0) {
+    // Try to initialize if not done yet
+    if (!this.initialized) {
+      this.initializeAfterUserInteraction();
+    }
+
+    try {
+      // Check for cinematic sounds first
+      if (this.cinematicSounds[soundName]) {
+        const sound = this.cinematicSounds[soundName];
+        if (typeof sound.rate === "function") {
+          sound.rate(rate);
+        }
+        sound.play();
+        return sound;
+      }
+
+      // Then check regular sounds
+      if (this.sounds[soundName]) {
+        const sound = this.sounds[soundName];
+        if (typeof sound.rate === "function") {
+          sound.rate(rate);
+        }
+        sound.play();
+        return sound;
+      } else {
+        console.warn(`Sound effect ${soundName} not found.`);
+      }
+    } catch (error) {
+      console.warn(`Error playing sound effect ${soundName}:`, error);
+    }
+    return null;
+  }
+
   // Stop a sound effect
   stop(soundName) {
     if (this.sounds[soundName]) {
+      this.sounds[soundName].stop();
+    }
+  }
+
+  // Stop a specific cinematic sound
+  stopSfx(soundName) {
+    if (this.cinematicSounds[soundName]) {
+      this.cinematicSounds[soundName].stop();
+    } else if (this.sounds[soundName]) {
       this.sounds[soundName].stop();
     }
   }
@@ -390,6 +597,50 @@ export class SoundManager {
       this.music[trackName].volume(0);
       this.music[trackName].play();
       this.music[trackName].fade(0, targetVolume, duration);
+    }
+  }
+
+  // Play cinematic music
+  playCinematicMusic() {
+    // Stop all music first
+    Object.keys(this.music).forEach((key) => {
+      this.music[key].stop();
+    });
+
+    // Play cinematic music if available
+    if (this.cinematicSounds.cinematic_main) {
+      this.cinematicSounds.cinematic_main.play();
+    }
+  }
+
+  // Stop cinematic music
+  stopCinematicMusic() {
+    if (this.cinematicSounds.cinematic_main) {
+      this.cinematicSounds.cinematic_main.stop();
+    }
+  }
+
+  // Fade to cinematic music
+  fadeToCinematicMusic(duration = 2000) {
+    // Fade out all current music
+    Object.keys(this.music).forEach((key) => {
+      if (this.music[key].playing()) {
+        this.music[key].fade(this.music[key].volume(), 0, duration);
+        setTimeout(() => {
+          this.music[key].stop();
+        }, duration);
+      }
+    });
+
+    // Fade in cinematic music
+    if (this.cinematicSounds.cinematic_main) {
+      this.cinematicSounds.cinematic_main.volume(0);
+      this.cinematicSounds.cinematic_main.play();
+      this.cinematicSounds.cinematic_main.fade(
+        0,
+        0.7 * this.narrativeVolume,
+        duration
+      );
     }
   }
 
@@ -517,6 +768,17 @@ export class SoundManager {
     });
   }
 
+  // Set narrative volume (for story content)
+  setNarrativeVolume(volume) {
+    this.narrativeVolume = Math.max(0, Math.min(1, volume));
+    Object.keys(this.cinematicSounds).forEach((key) => {
+      // Preserve the relative volume of each narrative sound
+      const relativeVolume =
+        this.cinematicSounds[key].volume() / (this.narrativeVolume || 1);
+      this.cinematicSounds[key].volume(relativeVolume * this.narrativeVolume);
+    });
+  }
+
   // Mute/unmute all sounds
   mute(muted) {
     Howler.mute(muted);
@@ -537,6 +799,11 @@ export class SoundManager {
     // Stop all ambient sounds
     Object.keys(this.ambientSounds).forEach((key) => {
       this.ambientSounds[key].stop();
+    });
+
+    // Stop all cinematic sounds
+    Object.keys(this.cinematicSounds).forEach((key) => {
+      this.cinematicSounds[key].stop();
     });
 
     // Unload all sounds

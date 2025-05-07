@@ -167,7 +167,7 @@ export class UIManager {
   // Update serum count display
   updateSerumCountDisplay() {
     document.getElementById(
-      "collected"
+      "serum-count"
     ).textContent = `Serum: ${this.gameState.serumCollected}/${this.gameState.totalSerum}`;
   }
 
@@ -255,11 +255,19 @@ export class UIManager {
     this.noteTitle.textContent = note.title;
     this.noteContent.textContent = note.content;
     this.storyNotePanel.style.display = "flex";
+    // Add the visible class to properly handle animations and pointer events
+    setTimeout(() => {
+      this.storyNotePanel.classList.add("visible");
+    }, 10); // Small delay to ensure display:flex has taken effect
   }
 
   // Hide a story note
   hideStoryNote() {
-    this.storyNotePanel.style.display = "none";
+    this.storyNotePanel.classList.remove("visible");
+    // Remove display style after animation completes
+    setTimeout(() => {
+      this.storyNotePanel.style.display = "none";
+    }, 500); // Match transition time from CSS
   }
 
   // Hide all screens (for restart)
