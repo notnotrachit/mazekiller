@@ -1,0 +1,40 @@
+/* base.css - Contains core styles, CSS variables, and reset */
+
+:root {
+  --primary-color: #00b3e6;
+  --secondary-color: #42b883;
+  --danger-color: #e63946;
+  --warning-color: #ffb703;
+  --dark-bg: #121212;
+  --darker-bg: #080808;
+  --lighter-bg: #1f1f1f;
+  --text-color: #e0e0e0;
+  --text-secondary: #aaaaaa;
+  --wckd-blue: #058ED9;
+  --font-main: 'Orbitron', sans-serif;
+  --font-secondary: 'Source Code Pro', monospace;
+  --infection-color: #e63946;
+  --fade-transition-time: 1.2s;
+  --fade-transition-time-slow: 1.8s;
+  --fade-transition-time-fast: 0.9s;
+  --memory-flash-duration: 1.5s;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  overflow: hidden;
+  font-family: var(--font-main);
+  background-color: var(--dark-bg);
+  color: var(--text-color);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

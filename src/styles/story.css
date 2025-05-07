@@ -1,0 +1,123 @@
+/* story.css - Styles for story-related UI elements like notes and cinematics */
+
+/* Story Note */
+.story-note {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-width: 600px;
+  background-color: rgba(18, 18, 18, 0.95);
+  border: 1px solid rgba(5, 142, 217, 0.5);
+  border-radius: 5px;
+  box-shadow: 0 0 30px rgba(5, 142, 217, 0.3);
+  z-index: 800;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none; /* Don't capture clicks when not actively visible */
+}
+
+.story-note.visible {
+  opacity: 1;
+  pointer-events: auto; /* Only capture clicks when visible */
+}
+
+.story-note-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.story-note-title {
+  font-family: var(--font-main);
+  color: var(--wckd-blue);
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+
+.story-note-content {
+  font-family: var(--font-secondary);
+  color: var(--text-color);
+  white-space: pre-line;
+  line-height: 1.6;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* Objective Visualization */
+.objective-notification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px 40px;
+  border: 2px solid var(--primary-color);
+  border-radius: 5px;
+  color: white;
+  font-family: var(--font-main);
+  text-align: center;
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.5s ease;
+}
+
+.objective-notification.active {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+/* Memory Flash Effect */
+.memory-flash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0);
+  z-index: 950;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.memory-flash.active {
+  animation: memoryFlash 1.5s ease-in-out;
+}
+
+/* Memory flashback */
+.memory-flashback {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0);
+  pointer-events: none;
+  z-index: 999;
+  transition: background-color 0.5s ease;
+}
+
+.memory-active {
+  animation: memoryFlash var(--memory-flash-duration) ease-out forwards;
+}
+
+.low-intensity {
+  --memory-flash-intensity: 0.3;
+  --memory-flash-saturation: 1.1;
+}
+
+.medium-intensity {
+  --memory-flash-intensity: 0.5;
+  --memory-flash-saturation: 1.3;
+}
+
+.high-intensity {
+  --memory-flash-intensity: 0.8;
+  --memory-flash-saturation: 1.5;
+}

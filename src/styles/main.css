@@ -1,0 +1,25 @@
+/* main.css - Main stylesheet that imports all other CSS files */
+
+/* Import base styles */
+@import './base.css';
+
+/* Import layout styles */
+@import './layout.css';
+
+/* Import screen styles */
+@import './screens.css';
+
+/* Import UI component styles */
+@import './ui-components.css';
+
+/* Import story-related styles */
+@import './story.css';
+
+/* Import cinematic styles */
+@import './cinematic.css';
+
+/* Import visual effects and animations */
+@import './effects.css';
+
+/* Import responsive styles */
+@import './responsive.css';

@@ -1,0 +1,96 @@
+/* responsive.css - Contains media queries for responsive design */
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .glitch-effect {
+    font-size: 32px;
+  }
+  
+  .story-text {
+    font-size: 14px;
+  }
+  
+  .difficulty-selection {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .pulse-btn {
+    font-size: 16px;
+    padding: 12px 24px;
+  }
+
+  .cinematic-title {
+    font-size: 2.5rem;
+  }
+
+  .cinematic-subtitle {
+    font-size: 1.5rem;
+  }
+
+  .cinematic-text {
+    font-size: 1.2rem;
+  }
+
+  .character-portrait {
+    width: 80px;
+    height: 80px;
+    left: 40px;
+    bottom: 60px;
+  }
+}
+
+/* For wider screens */
+@media (min-width: 1200px) {
+  .intro-content {
+    max-width: 1000px;
+  }
+
+  .cinematic-text {
+    max-width: 1000px;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  .top-left, .top-right {
+    padding: 5px 10px;
+  }
+  
+  .top-left div, .top-right div {
+    font-size: 12px;
+  }
+  
+  .health-bar-container, .stamina-bar-container {
+    width: 150px;
+  }
+  
+  .instructions {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .cinematic-title {
+    font-size: 2rem;
+  }
+
+  .cinematic-subtitle {
+    font-size: 1.2rem;
+  }
+
+  .cinematic-text {
+    font-size: 1rem;
+  }
+
+  .character-portrait {
+    width: 60px;
+    height: 60px;
+    left: 20px;
+    bottom: 50px;
+  }
+
+  .objective-notification {
+    font-size: 14px;
+    padding: 12px 20px;
+  }
+}

@@ -1,0 +1,306 @@
+/* cinematic.css - Contains styles for cinematic sequences and transitions */
+
+/* Cinematic Container */
+.cinematic-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  color: var(--text-color);
+  overflow: hidden;
+  transition: opacity 1s ease;
+}
+
+/* Cinematic Background and Images */
+.cinematic-transition-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 950; /* Place below intro content but above basic backgrounds */
+}
+
+.cinematic-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  z-index: 950; /* Match container z-index */
+  transition: opacity var(--fade-transition-time) cubic-bezier(0.19, 1, 0.22, 1), 
+              transform 3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Add dark overlay to all cinematic images */
+.cinematic-image::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent black overlay */
+  z-index: 1; /* Above the image but below the text */
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+.cinematic-image-active {
+  opacity: 1;
+}
+
+.cinematic-fade-enter {
+  opacity: 0;
+}
+
+.cinematic-fade-enter-active {
+  opacity: 1;
+}
+
+.cinematic-fade-exit-active {
+  opacity: 0;
+}
+
+/* Ensure cinematic content is above backgrounds */
+.cinematic-content {
+  position: relative;
+  z-index: 1001; /* Above cinematic background */
+  max-width: 80%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Transition Variants */
+.transition-fade {
+  transition: opacity var(--fade-transition-time) cubic-bezier(0.19, 1, 0.22, 1), 
+              transform 3s cubic-bezier(0.25, 0.1, 0.25, 1),
+              filter 1.5s ease;
+}
+
+.transition-fade-slow {
+  transition: opacity var(--fade-transition-time-slow) cubic-bezier(0.19, 1, 0.22, 1), 
+              transform 3.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+              filter 2s ease;
+}
+
+.transition-fade-fast {
+  transition: opacity var(--fade-transition-time-fast) cubic-bezier(0.19, 1, 0.22, 1), 
+              transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+              filter 1s ease;
+}
+
+/* Cinematic Content Elements */
+.cinematic-title {
+  font-size: 4rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5rem;
+  text-align: center;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 1.2s ease;
+}
+
+.cinematic-subtitle {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--secondary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.2rem;
+  text-align: center;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 1.2s ease;
+}
+
+/* Adjust cinematic text position and style for dialogue scenes */
+.cinematic-text {
+  font-size: 1.5rem;
+  max-width: 800px;
+  text-align: center;
+  line-height: 1.8;
+  margin-bottom: 180px; /* Increased to move text up and away from portrait */
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 1.2s ease;
+  font-family: var(--font-secondary);
+  background-color: rgba(0, 0, 0, 0.7); /* Darker background */
+  padding: 18px 28px; /* Increased padding */
+  border-radius: 8px; /* Rounded corners */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8); /* Add text shadow for better readability */
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.4); /* Add shadow for depth */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+}
+
+/* Cinematic Active States */
+.cinematic-container.active .cinematic-title,
+.cinematic-container.active .cinematic-subtitle,
+.cinematic-container.active .cinematic-text {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Character Portrait */
+.character-portrait {
+  position: absolute;
+  left: 80px;
+  bottom: 140px; /* Moved higher up to avoid overlapping text */
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid var(--primary-color);
+  box-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 1s ease;
+  z-index: 1002; /* Ensure portrait is above other elements */
+}
+
+.cinematic-container.active .character-portrait {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Voice Indicator */
+.cinematic-voice-indicator {
+  position: absolute;
+  bottom: 110px; /* Moved up to align with portrait */
+  left: 220px; /* Position to the right of portrait */
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9); /* Increased opacity for better visibility */
+  font-size: 1.1rem; /* Slightly larger */
+  font-weight: bold; /* Make it stand out more */
+  background-color: rgba(0, 0, 0, 0.7); /* Darker background for better readability */
+  padding: 5px 12px;
+  border-radius: 4px;
+  z-index: 1002; /* Same as portrait */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Add shadow for separation */
+  border-left: 3px solid var(--primary-color); /* Add accent border */
+}
+
+.voice-waves {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.voice-wave {
+  width: 3px;
+  height: 5px;
+  background-color: var(--primary-color);
+  margin: 0 2px;
+  border-radius: 1px;
+  animation: voiceWave 0.8s infinite ease;
+}
+
+.voice-wave:nth-child(2) {
+  animation-delay: 0.2s;
+  height: 10px;
+}
+
+.voice-wave:nth-child(3) {
+  animation-delay: 0.4s;
+  height: 15px;
+}
+
+.voice-wave:nth-child(4) {
+  animation-delay: 0.6s;
+  height: 10px;
+}
+
+/* Cinematic Controls */
+.cinematic-skip {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  padding: 10px 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.cinematic-skip:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.cinematic-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background-color: var(--primary-color);
+  width: 0%;
+  transition: width 0.2s linear;
+}
+
+/* Text Reveal Animations */
+.title-reveal {
+  opacity: 1 !important;
+  animation: fadeFromTop 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.subtitle-reveal {
+  opacity: 1 !important;
+  animation: fadeFromBottom 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+  animation-delay: 0.2s;
+}
+
+.text-reveal {
+  opacity: 1 !important;
+  animation: fadeIn 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+  animation-delay: 0.4s;
+}
+
+.dialogue-text-reveal {
+  opacity: 1 !important;
+  animation: typewriterEffect 3s cubic-bezier(0.19, 1, 0.22, 1);
+  animation-delay: 0.6s;
+}
+
+.portrait-reveal {
+  opacity: 1 !important;
+  animation: fadeFromLeft 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+  animation-delay: 0.3s;
+}
+
+.voice-reveal {
+  animation: fadeIn 1s cubic-bezier(0.19, 1, 0.22, 1);
+  animation-delay: 0.5s;
+}
+
+/* Special Effects */
+.parallax-background {
+  transition: transform 4s cubic-bezier(0.19, 1, 0.22, 1) !important;
+}
+
+.cinematic-pulse {
+  animation: cinematicPulse 4s infinite;
+}
+
+.finale-transition {
+  filter: contrast(1.1) brightness(1.1);
+  transform: scale(1.02);
+}

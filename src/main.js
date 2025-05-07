@@ -1,5 +1,5 @@
 // main.js - Main entry point for the Maze Killer game
-import "./style.css";
+import "./styles/main.css";
 import { Game } from "./managers/Game.js";
 
 // Initialize the game when the DOM is loaded

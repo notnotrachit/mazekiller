@@ -1,0 +1,170 @@
+/* ui-components.css - Styles for UI components like buttons, notifications, etc. */
+
+/* Buttons */
+.difficulty-btn {
+  background-color: var(--lighter-bg);
+  color: var(--text-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 8px 15px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  transition: all 0.2s ease;
+}
+
+.difficulty-btn:hover {
+  background-color: rgba(0, 179, 230, 0.2);
+}
+
+.difficulty-btn.active {
+  background-color: var(--primary-color);
+  color: var(--darker-bg);
+}
+
+.pulse-btn {
+  background-color: var(--primary-color);
+  color: var(--darker-bg);
+  font-weight: bold;
+  font-size: 20px;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+  font-family: var(--font-main);
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  animation: pulse 2s infinite;
+}
+
+.pulse-btn:hover {
+  background-color: var(--wckd-blue);
+  animation: none;
+  transform: scale(1.05);
+}
+
+#restart, #play-again {
+  padding: 12px 24px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#restart:hover, #play-again:hover {
+  background-color: var(--wckd-blue);
+}
+
+.story-note-close {
+  align-self: flex-end;
+  margin-top: 20px;
+  padding: 8px 16px;
+  background-color: rgba(5, 142, 217, 0.2);
+  color: var(--text-color);
+  border: none;
+  border-radius: 4px;
+  font-family: var(--font-secondary);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.story-note-close:hover {
+  background-color: rgba(5, 142, 217, 0.5);
+}
+
+.close-note {
+  background-color: #333;
+  color: #f5f5dc;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+}
+
+.close-note:hover {
+  background-color: #555;
+}
+
+/* Text styles for story content */
+.story-text {
+  margin-bottom: 30px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-color);
+  font-family: var(--font-secondary);
+}
+
+.story-text p {
+  margin-bottom: 16px;
+}
+
+.highlight {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.danger-text {
+  color: var(--danger-color);
+  font-weight: bold;
+}
+
+.serum-text {
+  color: var(--wckd-blue);
+  font-weight: bold;
+}
+
+.warning-text {
+  color: var(--warning-color);
+  font-weight: bold;
+}
+
+.typewriter {
+  overflow: hidden;
+  border-right: 2px solid var(--primary-color);
+  white-space: nowrap;
+  margin: 0 auto;
+  letter-spacing: 3px;
+  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+/* Objective Notification */
+.objective-notification {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  padding: 15px 25px;
+  background-color: rgba(5, 142, 217, 0.8);
+  color: white;
+  font-family: var(--font-main);
+  font-size: 18px;
+  border-radius: 4px;
+  box-shadow: 0 0 20px rgba(5, 142, 217, 0.5);
+  z-index: 900;
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+  text-align: center;
+  max-width: 80%;
+}
+
+.objective-notification.active {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.objective-notification::before {
+  content: "OBJECTIVE";
+  display: block;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.7);
+}

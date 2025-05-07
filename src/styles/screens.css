@@ -1,0 +1,288 @@
+/* screens.css - Contains styles for game screens (loading, intro, game over, pause) */
+
+/* Loading Screen */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--darker-bg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.loading-content {
+  width: 80%;
+  max-width: 600px;
+  text-align: center;
+}
+
+.loading-content h1 {
+  font-size: 32px;
+  margin-bottom: 30px;
+  letter-spacing: 2px;
+  color: var(--wckd-blue);
+}
+
+.loading-bar-container {
+  width: 100%;
+  height: 24px;
+  background-color: var(--lighter-bg);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 179, 230, 0.3);
+}
+
+.loading-bar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  transition: width 0.3s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.2) 50%, 
+    rgba(255, 255, 255, 0) 100%);
+  animation: loading-shimmer 1.5s infinite;
+}
+
+.loading-text {
+  margin-top: 20px;
+  font-family: var(--font-secondary);
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  font-size: 14px;
+}
+
+.wckd-logo {
+  margin-top: 50px;
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: var(--wckd-blue);
+  opacity: 0.8;
+}
+
+/* Intro Screen */
+.intro-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(8, 8, 8, 0.9);
+  z-index: 970; /* Increased to ensure it's above cinematic backgrounds */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.intro-content {
+  width: 80%;
+  max-width: 800px;
+  background-color: rgba(18, 18, 18, 0.9); /* Increased opacity for better visibility */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Slightly brighter border */
+  border-radius: 5px;
+  padding: 30px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.7); /* Enhanced shadow */
+  position: relative;
+  z-index: 975; /* Ensure content is above cinematic backgrounds */
+}
+
+/* Ensure the start button is clickable */
+#start-game {
+  position: relative;
+  z-index: 980; /* Updated to match the higher z-index system */
+}
+
+.glitch-effect {
+  font-size: 48px;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-bottom: 10px;
+  position: relative;
+  text-shadow: 0 0 15px rgba(0, 179, 230, 0.7);
+}
+
+.glitch-effect::before,
+.glitch-effect::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+}
+
+.glitch-effect::before {
+  animation: glitch-anim-1 2s infinite linear alternate-reverse;
+  clip: rect(44px, 950px, 56px, 0);
+  text-shadow: -2px 0 var(--danger-color);
+}
+
+.glitch-effect::after {
+  animation: glitch-anim-2 3s infinite linear alternate-reverse;
+  clip: rect(24px, 950px, 90px, 0);
+  text-shadow: 2px 0 var(--warning-color);
+}
+
+.wckd-subtitle {
+  font-size: 16px;
+  color: var(--wckd-blue);
+  letter-spacing: 2px;
+  margin-bottom: 30px;
+}
+
+.difficulty-selection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 15px;
+}
+
+/* Game Over and Win Screens */
+.game-over, .win-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 500;
+}
+
+.game-over h2, .win-screen h2 {
+  font-size: 48px;
+  margin-bottom: 20px;
+  color: var(--danger-color);
+}
+
+.win-screen h2 {
+  color: var(--secondary-color);
+}
+
+.game-over p, .win-screen p {
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+/* Pause Menu */
+.pause-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9); /* Darker background for better visibility */
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Increased to ensure it's above everything */
+  pointer-events: auto;
+  visibility: visible; /* Explicitly set visibility */
+}
+
+.pause-menu h2 {
+  font-size: 48px; /* Larger title */
+  margin-bottom: 30px;
+  color: var(--primary-color);
+  text-shadow: 0 0 15px rgba(0, 179, 230, 0.7); /* Add glow effect */
+}
+
+.pause-menu button {
+  width: 300px; /* Wider buttons */
+  padding: 20px 0; /* Taller buttons */
+  margin: 15px 0;
+  background-color: var(--lighter-bg);
+  color: var(--text-color);
+  border: 2px solid rgba(255, 255, 255, 0.3); /* More visible border */
+  border-radius: 8px;
+  font-size: 24px; /* Larger text */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-main);
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+#resume {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 20px rgba(0, 179, 230, 0.8);
+}
+
+.pause-menu button:hover {
+  transform: scale(1.05);
+  background-color: var(--primary-color);
+  color: white;
+}
+
+#resume:hover {
+  animation: none;
+  background-color: var(--wckd-blue);
+}
+
+.controls-info {
+  margin-top: 30px;
+  background-color: rgba(31, 31, 31, 0.7);
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.controls-info h3 {
+  margin-bottom: 15px;
+  color: var(--warning-color);
+}
+
+.controls-info p {
+  margin: 8px 0;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+}
+
+/* Cheat code activated notification */
+.cheat-notification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: var(--primary-color);
+  padding: 15px 30px;
+  border-radius: 5px;
+  font-family: var(--font-secondary);
+  font-size: 18px;
+  z-index: 1200;
+  animation: fadeInOut 2s forwards;
+  text-align: center;
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 0 20px rgba(0, 179, 230, 0.7);
+}
