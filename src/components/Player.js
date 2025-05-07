@@ -376,9 +376,68 @@ export class Player {
       this.maxInfection,
       this.infection + this.infectionRate * delta
     );
-    document.getElementById("infection").textContent = `Infection: ${Math.floor(
-      this.infection
-    )}%`;
+
+    // Update infection text display
+    const infectionElement = document.getElementById("infection");
+    if (infectionElement) {
+      infectionElement.textContent = `Infection: ${Math.floor(
+        this.infection
+      )}%`;
+    }
+
+    // Update infection visual overlay
+    const infectionOverlay = document.querySelector(".infection-overlay");
+    if (infectionOverlay) {
+      // Calculate opacity based on infection level
+      const opacity = this.infection / 200; // Max opacity 0.5 at 100% infection
+      infectionOverlay.style.backgroundColor = `rgba(230, 57, 70, ${opacity})`;
+
+      // Add visual effects for severe infection
+      if (this.infection > 75) {
+        infectionOverlay.classList.add("critical-flicker");
+        // Increase infection text visibility with color
+        if (infectionElement) {
+          infectionElement.style.color = "#ff3333";
+          infectionElement.style.fontWeight = "bold";
+        }
+      } else if (this.infection > 50) {
+        infectionOverlay.classList.add("severe-flicker");
+        infectionOverlay.classList.remove("critical-flicker");
+        if (infectionElement) {
+          infectionElement.style.color = "#ff6600";
+          infectionElement.style.fontWeight = "bold";
+        }
+      } else {
+        infectionOverlay.classList.remove("severe-flicker");
+        infectionOverlay.classList.remove("critical-flicker");
+        // Reset text color
+        if (infectionElement) {
+          infectionElement.style.color = "";
+          infectionElement.style.fontWeight = "";
+        }
+      }
+    }
+
+    // Update infection level display
+    if (this.infection > 0) {
+      document.getElementById(
+        "infection"
+      ).textContent = `Infection: ${Math.floor(this.infection)}%`;
+
+      // Update infection overlay
+      const overlay = document.getElementById("infection-overlay");
+      if (this.infection >= 75) {
+        overlay.className = "infection-overlay critical";
+      } else if (this.infection >= 50) {
+        overlay.className = "infection-overlay high";
+      } else if (this.infection >= 25) {
+        overlay.className = "infection-overlay medium";
+      } else if (this.infection > 0) {
+        overlay.className = "infection-overlay low";
+      } else {
+        overlay.className = "infection-overlay";
+      }
+    }
 
     // Game over check
     if (this.infection >= 100) {
@@ -419,6 +478,20 @@ export class Player {
     document.getElementById("infection").textContent = `Infection: ${Math.floor(
       this.infection
     )}%`;
+
+    // Update infection overlay
+    const overlay = document.getElementById("infection-overlay");
+    if (this.infection >= 75) {
+      overlay.className = "infection-overlay critical";
+    } else if (this.infection >= 50) {
+      overlay.className = "infection-overlay high";
+    } else if (this.infection >= 25) {
+      overlay.className = "infection-overlay medium";
+    } else if (this.infection > 0) {
+      overlay.className = "infection-overlay low";
+    } else {
+      overlay.className = "infection-overlay";
+    }
   }
 
   shakeCamera(intensity, duration) {
@@ -526,6 +599,8 @@ export class Player {
     document.querySelector(".health-bar").style.width = "100%";
     document.querySelector(".stamina-bar").style.width = "100%";
     document.getElementById("infection").textContent = "Infection: 0%";
+    document.getElementById("infection-overlay").className =
+      "infection-overlay";
 
     this.velocity.set(0, 0, 0);
     this.moveForward = false;
