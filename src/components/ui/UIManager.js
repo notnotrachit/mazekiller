@@ -235,7 +235,14 @@ export class UIManager {
         message = "Game Over";
     }
 
-    this.gameOverMessage.textContent = message;
+    // Update the paragraph in the game over screen directly
+    const gameOverP = this.gameOverScreen.querySelector("p");
+    if (gameOverP) {
+      gameOverP.textContent = message;
+    }
+
+    // Increase z-index to ensure it appears above other elements
+    this.gameOverScreen.style.zIndex = "1100";
     this.gameOverScreen.style.display = "flex";
   }
 
@@ -244,9 +251,23 @@ export class UIManager {
     const finalTime = this.formatTime(timeElapsed);
     const finalInfection = Math.floor(infectionLevel);
 
-    this.finalTimeElement.textContent = finalTime;
-    this.finalInfectionElement.textContent = `${finalInfection}%`;
+    // Create or update final time and infection elements if they exist
+    if (this.finalTimeElement) {
+      this.finalTimeElement.textContent = finalTime;
+    }
 
+    if (this.finalInfectionElement) {
+      this.finalInfectionElement.textContent = `${finalInfection}%`;
+    }
+
+    // Update the win message
+    const winP = this.winScreen.querySelector("p");
+    if (winP) {
+      winP.textContent = `You've successfully navigated the maze and controlled the infection. Time: ${finalTime}, Final Infection: ${finalInfection}%`;
+    }
+
+    // Increase z-index to ensure it appears above other elements
+    this.winScreen.style.zIndex = "1100";
     this.winScreen.style.display = "flex";
   }
 
