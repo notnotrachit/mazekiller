@@ -1,23 +1,44 @@
 /* base.css - Contains core styles, CSS variables, and reset */
 
 :root {
-  --primary-color: #00b3e6;
-  --secondary-color: #42b883;
-  --danger-color: #e63946;
-  --warning-color: #ffb703;
-  --dark-bg: #121212;
-  --darker-bg: #080808;
-  --lighter-bg: #1f1f1f;
-  --text-color: #e0e0e0;
-  --text-secondary: #aaaaaa;
-  --wckd-blue: #058ED9;
+  /* Enhanced futuristic color palette */
+  --primary-color: #00e5ff;
+  --primary-glow: rgba(0, 229, 255, 0.6);
+  --secondary-color: #64ffda;
+  --secondary-glow: rgba(100, 255, 218, 0.6);
+  --danger-color: #ff5252;
+  --warning-color: #ffeb3b;
+  --dark-bg: #090c14;
+  --darker-bg: #05070d;
+  --lighter-bg: #111827;
+  --text-color: #f0f0f0;
+  --text-secondary: #b0b0b0;
+  --text-highlight: #ffffff;
+  --wckd-blue: #1ac6ff;
+  --wckd-dark: #004a77;
+  --neon-glow: 0 0 10px rgba(0, 229, 255, 0.8), 0 0 20px rgba(0, 229, 255, 0.4);
+  --terminal-green: #4ade80;
+  --hologram-blue: rgba(0, 229, 255, 0.2);
+  
+  /* Fonts */
   --font-main: 'Orbitron', sans-serif;
   --font-secondary: 'Source Code Pro', monospace;
-  --infection-color: #e63946;
+  
+  /* Effect variables */
+  --infection-color: #ff5252;
+  --infection-glow: 0 0 15px rgba(255, 82, 82, 0.7);
   --fade-transition-time: 1.2s;
   --fade-transition-time-slow: 1.8s;
   --fade-transition-time-fast: 0.9s;
   --memory-flash-duration: 1.5s;
+  
+  /* UI elements */
+  --panel-bg: rgba(9, 12, 20, 0.85);
+  --panel-border: 1px solid rgba(0, 229, 255, 0.3);
+  --panel-glow: 0 0 15px rgba(0, 229, 255, 0.15);
+  --glass-effect: rgba(17, 24, 39, 0.8);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+  --grid-lines: rgba(26, 198, 255, 0.15);
 }
 
 * {
@@ -31,10 +52,66 @@ body, html {
   font-family: var(--font-main);
   background-color: var(--dark-bg);
   color: var(--text-color);
+  letter-spacing: 0.5px;
 }
 
 canvas {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* Futuristic button styles */
+button {
+  background-color: transparent;
+  color: var(--text-color);
+  border: 1px solid var(--primary-color);
+  padding: 0.8em 1.5em;
+  font-family: var(--font-main);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 2px;
+}
+
+button:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.2), transparent);
+  transition: all 0.5s ease;
+}
+
+button:hover {
+  box-shadow: 0 0 15px var(--primary-glow);
+  background-color: rgba(0, 229, 255, 0.1);
+}
+
+button:hover:before {
+  left: 100%;
+}
+
+/* Futuristic scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--darker-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--wckd-blue);
 }

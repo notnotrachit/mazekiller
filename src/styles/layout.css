@@ -13,68 +13,192 @@
   position: absolute;
   top: 20px;
   left: 20px;
-  background-color: rgba(8, 8, 8, 0.7);
-  padding: 10px 15px;
-  border-radius: 5px;
-  border-left: 3px solid var(--primary-color);
+  background-color: var(--panel-bg);
+  padding: 15px;
+  border-radius: 2px;
+  border-left: 2px solid var(--primary-color);
+  box-shadow: var(--panel-glow);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+}
+
+.top-left:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -5px;
+  width: 5px;
+  height: 25%;
+  background-color: var(--primary-color);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.top-left:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: -5px;
+  width: 5px;
+  height: 25%;
+  background-color: var(--primary-color);
+  box-shadow: 0 0 10px var(--primary-glow);
 }
 
 .top-left div {
   margin: 5px 0;
   font-family: var(--font-secondary);
   font-size: 14px;
+  letter-spacing: 0.5px;
+  position: relative;
+  padding-left: 15px;
+  line-height: 1.5;
+}
+
+.top-left div:before {
+  content: "//";
+  position: absolute;
+  left: 0;
+  color: var(--primary-color);
+  opacity: 0.7;
 }
 
 .top-right {
   position: absolute;
   top: 20px;
   right: 20px;
-  background-color: rgba(8, 8, 8, 0.7);
-  padding: 10px 15px;
-  border-radius: 5px;
-  border-right: 3px solid var(--warning-color);
+  background-color: var(--panel-bg);
+  padding: 15px;
+  border-radius: 2px;
+  border-right: 2px solid var(--warning-color);
+  box-shadow: var(--panel-glow);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.top-right:after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: 10px;
+  width: 30px;
+  height: 5px;
+  background-color: var(--warning-color);
 }
 
 #objective {
   font-family: var(--font-secondary);
   font-size: 14px;
   color: var(--warning-color);
+  letter-spacing: 0.5px;
+  position: relative;
+  padding-left: 15px;
 }
 
+#objective:before {
+  content: ">";
+  position: absolute;
+  left: 0;
+  color: var(--warning-color);
+}
+
+/* Status Bars */
 .health-bar-container {
   position: absolute;
   bottom: 30px;
   left: 20px;
   width: 200px;
-  height: 10px;
+  height: 12px;
   background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 5px;
+  border-radius: 2px;
   overflow: hidden;
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  box-shadow: 0 0 10px rgba(255, 82, 82, 0.2);
+}
+
+.health-bar-container:before {
+  content: "HEALTH";
+  position: absolute;
+  left: -65px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--danger-color);
+  font-family: var(--font-main);
+  letter-spacing: 1px;
 }
 
 .health-bar {
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #ff3300, #ff6600);
+  background: linear-gradient(90deg, #ff3300, #ff5252);
+  position: relative;
   transition: width 0.3s ease-out;
+}
+
+.health-bar:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 5px,
+    rgba(255, 255, 255, 0.1) 5px,
+    rgba(255, 255, 255, 0.1) 10px
+  );
 }
 
 .stamina-bar-container {
   position: absolute;
-  bottom: 45px;
+  bottom: 50px;
   left: 20px;
   width: 200px;
-  height: 5px;
+  height: 6px;
   background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 5px;
+  border-radius: 2px;
   overflow: hidden;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+}
+
+.stamina-bar-container:before {
+  content: "STAMINA";
+  position: absolute;
+  left: -65px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--primary-color);
+  font-family: var(--font-main);
+  letter-spacing: 1px;
 }
 
 .stamina-bar {
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #3399ff, #66ccff);
+  background: linear-gradient(90deg, var(--primary-color), var(--wckd-blue));
+  position: relative;
   transition: width 0.2s ease-out;
+}
+
+.stamina-bar:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 3px,
+    rgba(255, 255, 255, 0.1) 3px,
+    rgba(255, 255, 255, 0.1) 6px
+  );
 }
 
 .crosshair {
@@ -82,9 +206,33 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 24px;
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 20px;
+  text-shadow: 0 0 5px var(--primary-glow);
+  pointer-events: none;
+  width: 15px;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crosshair:before, .crosshair:after {
+  content: '';
+  position: absolute;
+  background-color: var(--text-color);
+}
+
+.crosshair:before {
+  width: 1px;
+  height: 15px;
+  box-shadow: 0 0 3px var(--primary-glow);
+}
+
+.crosshair:after {
+  width: 15px;
+  height: 1px;
+  box-shadow: 0 0 3px var(--primary-glow);
 }
 
 /* Interaction Prompt */
@@ -108,14 +256,21 @@
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--panel-bg);
   color: var(--text-color);
   padding: 10px 20px;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 2px;
+  font-size: 12px;
   z-index: 200;
   white-space: nowrap;
   font-family: var(--font-secondary);
+  border: var(--panel-border);
+  box-shadow: var(--panel-glow);
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 1;
+  transition: opacity 0.5s ease;
 }
 
 /* Minimap */
@@ -123,20 +278,34 @@
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: rgba(0, 0, 0, 0.7);
-  border: 2px solid var(--primary-color);
-  border-radius: 5px;
+  background-color: var(--panel-bg);
+  border: var(--panel-border);
+  border-radius: 2px;
   padding: 10px;
   z-index: 400;
   display: none; /* Hidden by default, will be toggled by cheat code */
-  box-shadow: 0 0 15px rgba(0, 179, 230, 0.5);
+  box-shadow: var(--panel-glow);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.minimap-container:before {
+  content: "WCKD TERRAIN ANALYZER";
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-size: 10px;
+  color: var(--primary-color);
+  letter-spacing: 1px;
+  font-family: var(--font-main);
 }
 
 .minimap-canvas {
   display: block;
   width: 200px;
   height: 200px;
-  border-radius: 3px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 229, 255, 0.3);
 }
 
 .minimap-legend {
@@ -144,8 +313,10 @@
   display: flex;
   justify-content: space-between;
   font-family: var(--font-secondary);
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-color);
+  border-top: 1px solid rgba(0, 229, 255, 0.2);
+  padding-top: 5px;
 }
 
 .minimap-legend div {
@@ -156,10 +327,11 @@
 
 .minimap-legend span {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   margin-right: 4px;
   border-radius: 50%;
+  box-shadow: 0 0 3px currentColor;
 }
 
 .legend-player {
@@ -167,19 +339,19 @@
 }
 
 .legend-griever {
-  background-color: #F44336; /* Red */
+  background-color: #FF5252; /* Red */
 }
 
 .legend-serum {
-  background-color: #2196F3; /* Blue */
+  background-color: #00E5FF; /* Cyan */
 }
 
 .legend-note {
-  background-color: #FFC107; /* Amber */
+  background-color: #FFEB3B; /* Yellow */
 }
 
 .legend-exit {
-  background-color: #4CAF50; /* Green */
+  background-color: #64FFDA; /* Teal */
 }
 
 /* Infection and Time Warning Overlays */
@@ -191,25 +363,51 @@
   height: 100%;
   pointer-events: none;
   z-index: 200;
-  background-color: rgba(230, 57, 70, 0);
+  background-color: rgba(255, 82, 82, 0);
   transition: background-color 0.5s ease;
 }
 
 .infection-overlay.low {
-  background-color: rgba(230, 57, 70, 0.1);
+  background-color: rgba(255, 82, 82, 0.1);
 }
 
 .infection-overlay.medium {
-  background-color: rgba(230, 57, 70, 0.25);
+  background-color: rgba(255, 82, 82, 0.25);
 }
 
 .infection-overlay.high {
-  background-color: rgba(230, 57, 70, 0.4);
+  background-color: rgba(255, 82, 82, 0.4);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 82, 82, 0.1),
+    rgba(255, 82, 82, 0.1) 5px,
+    transparent 5px,
+    transparent 10px
+  );
 }
 
 .infection-overlay.critical {
-  background-color: rgba(230, 57, 70, 0.6);
-  animation: pulse 1.5s infinite;
+  background-color: rgba(255, 82, 82, 0.6);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 82, 82, 0.3),
+    rgba(255, 82, 82, 0.3) 5px,
+    rgba(255, 82, 82, 0.1) 5px,
+    rgba(255, 82, 82, 0.1) 10px
+  );
+  animation: pulse-infection 1.5s infinite;
+}
+
+@keyframes pulse-infection {
+  0% {
+    background-color: rgba(255, 82, 82, 0.5);
+  }
+  50% {
+    background-color: rgba(255, 82, 82,.7);
+  }
+  100% {
+    background-color: rgba(255, 82, 82, 0.5);
+  }
 }
 
 .time-warning-overlay {
@@ -220,6 +418,6 @@
   height: 100%;
   pointer-events: none;
   z-index: 180;
-  background-color: rgba(255, 183, 3, 0);
+  background-color: rgba(255, 235, 59, 0);
   transition: background-color 0.3s ease;
 }

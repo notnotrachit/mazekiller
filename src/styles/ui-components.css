@@ -2,61 +2,130 @@
 
 /* Buttons */
 .difficulty-btn {
-  background-color: var(--lighter-bg);
+  background-color: var(--darker-bg);
   color: var(--text-color);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-  padding: 8px 15px;
+  border: var(--panel-border);
+  border-radius: 2px;
+  padding: 10px 20px;
   cursor: pointer;
   font-family: var(--font-main);
   transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.difficulty-btn:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.2), transparent);
+  transition: all 0.5s ease;
 }
 
 .difficulty-btn:hover {
-  background-color: rgba(0, 179, 230, 0.2);
+  background-color: rgba(0, 229, 255, 0.1);
+  box-shadow: var(--neon-glow);
+}
+
+.difficulty-btn:hover:before {
+  left: 100%;
 }
 
 .difficulty-btn.active {
   background-color: var(--primary-color);
   color: var(--darker-bg);
+  font-weight: bold;
+  box-shadow: var(--neon-glow);
 }
 
 .pulse-btn {
-  background-color: var(--primary-color);
-  color: var(--darker-bg);
+  background-color: transparent;
+  color: var(--text-highlight);
   font-weight: bold;
-  font-size: 20px;
+  font-size: 18px;
   padding: 15px 30px;
-  border: none;
-  border-radius: 5px;
+  border: 2px solid var(--primary-color);
+  border-radius: 2px;
   cursor: pointer;
   display: block;
   margin: 0 auto;
   font-family: var(--font-main);
   letter-spacing: 2px;
+  text-transform: uppercase;
   transition: all 0.3s ease;
-  animation: pulse 2s infinite;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.pulse-btn:after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(0, 229, 255, 0.2), transparent);
+  transform: rotate(45deg);
+  animation: pulse-effect 3s linear infinite;
 }
 
 .pulse-btn:hover {
-  background-color: var(--wckd-blue);
-  animation: none;
+  background-color: rgba(0, 229, 255, 0.2);
+  box-shadow: 0 0 20px var(--primary-glow);
   transform: scale(1.05);
+}
+
+@keyframes pulse-effect {
+  0% {
+    transform: rotate(45deg) translateY(-100%);
+  }
+  100% {
+    transform: rotate(45deg) translateY(100%);
+  }
 }
 
 #restart, #play-again {
   padding: 12px 24px;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 18px;
+  background-color: transparent;
+  color: var(--text-color);
+  border: 2px solid var(--primary-color);
+  border-radius: 2px;
+  font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  font-weight: bold;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+}
+
+#restart:before, #play-again:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.2), transparent);
+  transition: all 0.5s ease;
 }
 
 #restart:hover, #play-again:hover {
-  background-color: var(--wckd-blue);
+  background-color: rgba(0, 229, 255, 0.2);
+  box-shadow: 0 0 20px var(--primary-glow);
+}
+
+#restart:hover:before, #play-again:hover:before {
+  left: 100%;
 }
 
 .story-note-close {
@@ -77,50 +146,72 @@
 }
 
 .close-note {
-  background-color: #333;
-  color: #f5f5dc;
-  border: none;
+  background-color: var(--darker-bg);
+  color: var(--text-color);
+  border: var(--panel-border);
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 2px;
   cursor: pointer;
   font-family: var(--font-secondary);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
 }
 
 .close-note:hover {
-  background-color: #555;
+  background-color: rgba(0, 229, 255, 0.1);
+  box-shadow: 0 0 15px var(--primary-glow);
 }
 
 /* Text styles for story content */
 .story-text {
   margin-bottom: 30px;
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--text-color);
   font-family: var(--font-secondary);
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .story-text p {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  position: relative;
+  padding-left: 15px;
+}
+
+.story-text p:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+  width: 3px;
+  background: linear-gradient(to bottom, transparent, var(--primary-color), transparent);
 }
 
 .highlight {
   color: var(--primary-color);
   font-weight: bold;
+  text-shadow: 0 0 5px var(--primary-glow);
 }
 
 .danger-text {
   color: var(--danger-color);
   font-weight: bold;
+  text-shadow: 0 0 5px rgba(255, 82, 82, 0.5);
 }
 
 .serum-text {
-  color: var(--wckd-blue);
+  color: var(--secondary-color);
   font-weight: bold;
+  text-shadow: 0 0 5px var(--secondary-glow);
 }
 
 .warning-text {
   color: var(--warning-color);
   font-weight: bold;
+  text-shadow: 0 0 5px rgba(255, 235, 59, 0.5);
 }
 
 .typewriter {
@@ -132,6 +223,7 @@
   animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
   color: var(--primary-color);
   font-weight: bold;
+  text-shadow: 0 0 5px var(--primary-glow);
 }
 
 /* Objective Notification */
@@ -141,17 +233,21 @@
   left: 50%;
   transform: translateX(-50%) translateY(-100px);
   padding: 15px 25px;
-  background-color: rgba(5, 142, 217, 0.8);
-  color: white;
+  background-color: var(--panel-bg);
+  color: var(--text-color);
   font-family: var(--font-main);
-  font-size: 18px;
-  border-radius: 4px;
-  box-shadow: 0 0 20px rgba(5, 142, 217, 0.5);
+  font-size: 16px;
+  border: var(--panel-border);
+  border-radius: 2px;
+  box-shadow: var(--panel-glow), 0 0 20px rgba(0, 229, 255, 0.3);
   z-index: 900;
   opacity: 0;
   transition: transform 0.5s ease, opacity 0.5s ease;
   text-align: center;
   max-width: 80%;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  letter-spacing: 1px;
 }
 
 .objective-notification.active {
@@ -164,7 +260,71 @@
   display: block;
   font-size: 12px;
   font-weight: bold;
-  margin-bottom: 5px;
-  letter-spacing: 2px;
-  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+  letter-spacing: 3px;
+  color: var(--primary-color);
+  text-shadow: 0 0 5px var(--primary-glow);
+}
+
+.objective-notification::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+}
+
+/* WCKD Futuristic Logo */
+.wckd-logo {
+  font-family: var(--font-main);
+  position: relative;
+  display: inline-block;
+  letter-spacing: 5px;
+  text-shadow: 0 0 5px var(--primary-glow);
+  font-weight: bold;
+}
+
+.wckd-logo:before {
+  content: 'W.C.K.D';
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--primary-color);
+  filter: blur(3px);
+  opacity: 0.7;
+  animation: pulse-logo 2s infinite alternate;
+}
+
+@keyframes pulse-logo {
+  0% {
+    filter: blur(3px);
+    opacity: 0.7;
+  }
+  100% {
+    filter: blur(5px);
+    opacity: 0.9;
+  }
+}
+
+/* Interaction Prompt */
+.interaction-prompt {
+  position: fixed;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--panel-bg);
+  color: var(--text-highlight);
+  padding: 10px 20px;
+  border-radius: 2px;
+  font-family: var(--font-main);
+  font-size: 14px;
+  border: var(--panel-border);
+  box-shadow: var(--panel-glow);
+  display: none;
+  z-index: 900;
+  letter-spacing: 1px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
