@@ -840,21 +840,25 @@ export class GameWorld {
       const rockType = Math.floor(Math.random() * 3);
       let geometry;
 
+      // SMALLER ROCKS: Reduced size by 50%
       switch (rockType) {
         case 0: // Round rock
           geometry = new THREE.DodecahedronGeometry(
-            0.3 + Math.random() * 0.3,
+            (0.3 + Math.random() * 0.3) * 0.5, // 50% smaller
             1
           );
           break;
         case 1: // Angular rock
-          geometry = new THREE.OctahedronGeometry(0.3 + Math.random() * 0.3, 1);
+          geometry = new THREE.OctahedronGeometry(
+            (0.3 + Math.random() * 0.3) * 0.5, // 50% smaller
+            1
+          );
           break;
         case 2: // Flat rock
           geometry = new THREE.CylinderGeometry(
-            0.4 + Math.random() * 0.3,
-            0.3 + Math.random() * 0.3,
-            0.2 + Math.random() * 0.2,
+            (0.4 + Math.random() * 0.3) * 0.5, // 50% smaller
+            (0.3 + Math.random() * 0.3) * 0.5, // 50% smaller
+            (0.2 + Math.random() * 0.2) * 0.5, // 50% smaller
             6
           );
           break;
@@ -869,11 +873,11 @@ export class GameWorld {
 
       const rock = new THREE.Mesh(geometry, rockMaterial);
 
-      // Position within group
+      // Position within group - also scaled down
       rock.position.set(
-        (Math.random() - 0.5) * 0.3,
-        Math.random() * 0.2,
-        (Math.random() - 0.5) * 0.3
+        (Math.random() - 0.5) * 0.15, // 50% smaller positioning
+        Math.random() * 0.1, // 50% smaller positioning
+        (Math.random() - 0.5) * 0.15 // 50% smaller positioning
       );
 
       // Random rotation

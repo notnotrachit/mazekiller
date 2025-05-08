@@ -18,8 +18,8 @@ export class Player {
     this.isJumping = false;
 
     // Player stats - Adjusted for better movement feel
-    this.speed = 8.0;
-    this.sprintSpeed = 16.0;
+    this.speed = 6.0; // Reduced from 8.0 for slower movement
+    this.sprintSpeed = 12.0; // Reduced from 16.0 for more balanced sprinting
     this.height = 1.6;
     this.jumpHeight = 20;
     this.gravity = 30;
