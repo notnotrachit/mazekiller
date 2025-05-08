@@ -47,36 +47,18 @@ export class StoryProgress {
     introStory.mainText.forEach((text, index) => {
       const paragraph = document.createElement("p");
       paragraph.innerHTML = text;
+      paragraph.className = "text-reveal"; // Use the consistent text-reveal class from cinematic.css
 
       // Add warning class to the last paragraph
       if (index === introStory.mainText.length - 1) {
-        paragraph.className = "warning-text";
+        paragraph.className = "warning-text text-reveal";
       }
 
-      storyTextElement.appendChild(paragraph);
-
-      // Add slight delay to create a sequential revealing effect
+      // Set a staggered delay for sequential revealing
       paragraph.style.animationDelay = `${(index + 1) * 0.5}s`;
-      paragraph.style.opacity = "0";
-      paragraph.style.animation = "fadeIn 1s forwards";
-    });
 
-    // Add some custom CSS for the animation if not already present
-    if (!document.querySelector("#story-text-animations")) {
-      const styleElement = document.createElement("style");
-      styleElement.id = "story-text-animations";
-      styleElement.textContent = `
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .story-text p {
-          opacity: 0;
-          animation: fadeIn 1s forwards;
-        }
-      `;
-      document.head.appendChild(styleElement);
-    }
+      storyTextElement.appendChild(paragraph);
+    });
 
     console.log("Intro story text has been set");
   }
