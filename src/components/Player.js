@@ -247,7 +247,7 @@ export class Player {
       return null;
     }
 
-    // Apply gravity
+    // Apply gravity using delta time
     this.velocity.y -= this.gravity * delta;
 
     // DIRECT MOVEMENT: Calculate the move vector based on input flags
@@ -292,11 +292,13 @@ export class Player {
       // Scale by speed and delta time
       const finalMove = moveVector.multiplyScalar(speed * delta);
 
-      // COLLISION HANDLING: Check if new position would cause collision
-      const newPosition = new THREE.Vector3()
+      // COLLISION HANDLING: Optimize by reusing vectors instead of creating new ones
+      if (!this._tempVector) this._tempVector = new THREE.Vector3();
+      const newPosition = this._tempVector
         .copy(controlsObject.position)
         .add(finalMove);
 
+      // Only process collision if function provided
       if (checkCollision && typeof checkCollision === "function") {
         const hasCollision = checkCollision(newPosition);
 
@@ -304,13 +306,12 @@ export class Player {
           // If no collision, apply the movement
           controlsObject.position.copy(newPosition);
         } else {
-          console.log("[COLLISION] Wall collision prevented movement");
+          // Optimize sliding along walls by caching vectors
+          if (!this._tempVectorX) this._tempVectorX = new THREE.Vector3();
+          if (!this._tempVectorZ) this._tempVectorZ = new THREE.Vector3();
 
-          // Try sliding along walls by attempting X and Z movement separately
-          // First try moving only in X direction
-          const newPositionX = new THREE.Vector3().copy(
-            controlsObject.position
-          );
+          // Try moving only in X direction
+          const newPositionX = this._tempVectorX.copy(controlsObject.position);
           newPositionX.x += finalMove.x;
 
           if (!checkCollision(newPositionX)) {
@@ -318,9 +319,7 @@ export class Player {
           }
 
           // Then try moving only in Z direction
-          const newPositionZ = new THREE.Vector3().copy(
-            controlsObject.position
-          );
+          const newPositionZ = this._tempVectorZ.copy(controlsObject.position);
           newPositionZ.z += finalMove.z;
 
           if (!checkCollision(newPositionZ)) {
@@ -329,8 +328,7 @@ export class Player {
         }
       } else {
         // If no collision check function provided, just move
-        console.warn("[COLLISION] No collision check function provided");
-        controlsObject.position.add(finalMove);
+        controlsObject.position.copy(newPosition);
       }
     }
 
@@ -366,81 +364,78 @@ export class Player {
       );
     }
 
-    // Update UI
-    document.querySelector(".stamina-bar").style.width = `${
-      (this.stamina / this.maxStamina) * 100
-    }%`;
+    // Optimize UI updates by using a frame counter to reduce DOM operations
+    this.frameCount = (this.frameCount || 0) + 1;
+    if (this.frameCount % 3 === 0) {
+      // Only update UI every 3 frames
+      // Update UI
+      document.querySelector(".stamina-bar").style.width = `${
+        (this.stamina / this.maxStamina) * 100
+      }%`;
+    }
 
-    // Update infection
+    // Update infection over time
     this.infection = Math.min(
       this.maxInfection,
       this.infection + this.infectionRate * delta
     );
 
-    // Update infection text display
-    const infectionElement = document.getElementById("infection");
-    if (infectionElement) {
-      infectionElement.textContent = `Infection: ${Math.floor(
-        this.infection
-      )}%`;
-    }
+    // Update infection text display and visual effects, also throttled to reduce DOM ops
+    if (this.frameCount % 5 === 0) {
+      // Spread out UI updates for better performance
+      const infectionElement = document.getElementById("infection");
+      if (infectionElement) {
+        infectionElement.textContent = `Infection: ${Math.floor(
+          this.infection
+        )}%`;
+      }
 
-    // Update infection visual overlay
-    const infectionOverlay = document.querySelector(".infection-overlay");
-    if (infectionOverlay) {
-      // Calculate opacity based on infection level
-      const opacity = this.infection / 200; // Max opacity 0.5 at 100% infection
-      infectionOverlay.style.backgroundColor = `rgba(230, 57, 70, ${opacity})`;
+      // Update infection overlay with optimized visual effects
+      const infectionOverlay = document.getElementById("infection-overlay");
+      if (infectionOverlay) {
+        if (this.infection > 90) {
+          infectionOverlay.classList.add("critical-flicker");
+          infectionOverlay.classList.remove("severe-flicker");
+          if (infectionElement) {
+            infectionElement.style.color = "#ff0000";
+            infectionElement.style.fontWeight = "bold";
+          }
+        } else if (this.infection > 75) {
+          infectionOverlay.classList.add("severe-flicker");
+          infectionOverlay.classList.remove("critical-flicker");
+          if (infectionElement) {
+            infectionElement.style.color = "#ff6600";
+            infectionElement.style.fontWeight = "bold";
+          }
+        } else {
+          infectionOverlay.classList.remove("severe-flicker");
+          infectionOverlay.classList.remove("critical-flicker");
+          // Reset text color
+          if (infectionElement) {
+            infectionElement.style.color = "";
+            infectionElement.style.fontWeight = "";
+          }
+        }
+      }
 
-      // Add visual effects for severe infection
-      if (this.infection > 75) {
-        infectionOverlay.classList.add("critical-flicker");
-        // Increase infection text visibility with color
-        if (infectionElement) {
-          infectionElement.style.color = "#ff3333";
-          infectionElement.style.fontWeight = "bold";
-        }
-      } else if (this.infection > 50) {
-        infectionOverlay.classList.add("severe-flicker");
-        infectionOverlay.classList.remove("critical-flicker");
-        if (infectionElement) {
-          infectionElement.style.color = "#ff6600";
-          infectionElement.style.fontWeight = "bold";
-        }
-      } else {
-        infectionOverlay.classList.remove("severe-flicker");
-        infectionOverlay.classList.remove("critical-flicker");
-        // Reset text color
-        if (infectionElement) {
-          infectionElement.style.color = "";
-          infectionElement.style.fontWeight = "";
+      // Update infection level display
+      if (this.infection > 0) {
+        // Update infection overlay
+        const overlay = document.getElementById("infection-overlay");
+        if (this.infection >= 75) {
+          overlay.className = "infection-overlay critical";
+        } else if (this.infection >= 50) {
+          overlay.className = "infection-overlay severe";
+        } else if (this.infection >= 25) {
+          overlay.className = "infection-overlay moderate";
+        } else {
+          overlay.className = "infection-overlay mild";
         }
       }
     }
 
-    // Update infection level display
-    if (this.infection > 0) {
-      document.getElementById(
-        "infection"
-      ).textContent = `Infection: ${Math.floor(this.infection)}%`;
-
-      // Update infection overlay
-      const overlay = document.getElementById("infection-overlay");
-      if (this.infection >= 75) {
-        overlay.className = "infection-overlay critical";
-      } else if (this.infection >= 50) {
-        overlay.className = "infection-overlay high";
-      } else if (this.infection >= 25) {
-        overlay.className = "infection-overlay medium";
-      } else if (this.infection > 0) {
-        overlay.className = "infection-overlay low";
-      } else {
-        overlay.className = "infection-overlay";
-      }
-    }
-
-    // Game over check
-    if (this.infection >= 100) {
+    // Check if player is completely infected
+    if (this.infection >= this.maxInfection) {
       return "infected";
     }
 

@@ -8,6 +8,7 @@ export class InputManager {
       onEscape: callbacks.onEscape || (() => {}),
       onInteract: callbacks.onInteract || (() => {}),
       onToggleMinimap: callbacks.onToggleMinimap || (() => {}),
+      onToggleFPS: callbacks.onToggleFPS || (() => {}),
     };
 
     // Cheat code sequence tracking
@@ -53,6 +54,11 @@ export class InputManager {
     // E key - interaction
     if (event.code === "KeyE") {
       this.callbacks.onInteract();
+    }
+
+    // F key - toggle FPS display
+    if (event.code === "KeyF") {
+      this.callbacks.onToggleFPS();
     }
 
     // Track keys for cheat code

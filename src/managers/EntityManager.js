@@ -61,7 +61,7 @@ export class EntityManager {
     return this.grievers;
   }
 
-  // Update grievers (with performance optimization)
+  // Update grievers with better performance optimizations
   updateGrievers(
     delta,
     playerPosition,
@@ -75,39 +75,104 @@ export class EntityManager {
       damage: 0,
     };
 
-    // Only process one griever per frame if we're handling many collection effects
-    const grieversToProcess =
-      isProcessingMany && serumCollected >= 2 ? 1 : this.grievers.length;
+    // Skip processing if no grievers
+    if (!this.grievers || this.grievers.length === 0) {
+      return result;
+    }
 
-    for (let i = 0; i < grieversToProcess; i++) {
-      const griever = this.grievers[i];
+    // Use frame counting for staggered updates
+    this.grieverFrameCount = (this.grieverFrameCount || 0) + 1;
 
-      // Only process grievers within a reasonable distance
+    // Ensure we process at least one griever every frame
+    // But stagger processing of others to improve performance
+    const grieversToProcess = Math.min(
+      1 + Math.floor(this.grieverFrameCount % this.grievers.length),
+      this.grievers.length
+    );
+
+    // Find closest griever to determine priority
+    let closestGrieverIndex = 0;
+    let closestDistance = Infinity;
+
+    for (let i = 0; i < this.grievers.length; i++) {
+      const distance = this.grievers[i].position.distanceTo(playerPosition);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestGrieverIndex = i;
+      }
+    }
+
+    // Always process the closest griever to ensure responsive AI
+    const closestGriever = this.grievers[closestGrieverIndex];
+    const aggressionMultiplier = environmentStatus.isNight
+      ? 2.0
+      : environmentStatus.isTransitioning
+      ? 1.5
+      : 1.0;
+
+    // Only perform full AI update if griever is close
+    if (closestDistance < 30) {
+      closestGriever.update(delta, playerPosition, aggressionMultiplier);
+
+      // Check if griever caught player
+      if (
+        closestDistance < 3 &&
+        closestGriever.checkPlayerCollision(playerPosition)
+      ) {
+        result.playerWasHit = true;
+        result.damage = 34; // One hit takes ~1/3 health
+
+        if (this.soundManager) {
+          this.soundManager.play("grieverAttack", 1.0);
+        }
+      }
+    } else {
+      // Use simplified update for distant griever
+      closestGriever.updateSimple(delta);
+    }
+
+    // Process additional grievers with spacing (skip the closest one)
+    let processedCount = 1;
+    const baseIndex = this.grieverFrameCount % this.grievers.length;
+
+    for (
+      let i = 1;
+      processedCount < grieversToProcess && i < this.grievers.length;
+      i++
+    ) {
+      const index = (baseIndex + i) % this.grievers.length;
+
+      // Skip the closest griever as we already processed it
+      if (index === closestGrieverIndex) {
+        continue;
+      }
+
+      const griever = this.grievers[index];
       const distance = griever.position.distanceTo(playerPosition);
-      if (distance < 30) {
-        // Grievers are more active at night
-        const aggressionMultiplier = environmentStatus.isNight
-          ? 2.0
-          : environmentStatus.isTransitioning
-          ? 1.5
-          : 1.0;
 
-        griever.update(delta, playerPosition, aggressionMultiplier);
+      // Use very simplified update for all other grievers to save CPU
+      if (distance > 50) {
+        // Only update animations for very distant grievers
+        griever.animateEyes(delta);
+      } else if (distance < 30) {
+        // Use simple update for nearby but not closest grievers
+        griever.updateSimple(delta);
 
-        // Check if griever caught player - only if very close
-        if (distance < 3 && griever.checkPlayerCollision(playerPosition)) {
+        // Check for collisions only with closest ones
+        if (distance < 5 && griever.checkPlayerCollision(playerPosition)) {
           result.playerWasHit = true;
-          result.damage = 34; // One hit takes ~1/3 health
+          result.damage = 34;
 
-          // Play attack sound if available
           if (this.soundManager) {
             this.soundManager.play("grieverAttack", 1.0);
           }
-
-          // Debug message
-          console.log("GRIEVER: Player hit! Damage: " + result.damage);
         }
+      } else {
+        // Minimal update for distant grievers
+        griever.animateEyes(delta);
       }
+
+      processedCount++;
     }
 
     return result;

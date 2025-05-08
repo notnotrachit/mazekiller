@@ -13,14 +13,23 @@ export class GameRenderer {
   async initialize() {
     this.renderer = await this.createRenderer();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // Enhance lighting with improved tone mapping and exposure
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 2.2; // Increase exposure for better brightness (was 1.8)
-    this.renderer.outputEncoding = THREE.sRGBEncoding; // Better color representation
+    // Lower pixel ratio to improve performance
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+
+    // Use basic shadows for performance
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.BasicShadowMap;
+
+    // Simplified tone mapping for better performance
+    this.renderer.toneMapping = THREE.LinearToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
+
+    // Performance power preference
+    this.renderer.powerPreference = "high-performance";
+
+    // Medium precision for better performance
+    this.renderer.precision = "mediump";
 
     document.body.appendChild(this.renderer.domElement);
 
@@ -29,15 +38,7 @@ export class GameRenderer {
 
     // Setup focus handling
     this.domElement.setAttribute("tabindex", "0");
-    this.domElement.style.outline = "none"; // Remove focus outline
-
-    console.log("[DEBUG] Renderer initialized:", {
-      size: {
-        width: this.renderer.domElement.width,
-        height: this.renderer.domElement.height,
-      },
-      pixelRatio: this.renderer.getPixelRatio(),
-    });
+    this.domElement.style.outline = "none";
 
     this.rendererInitialized = true;
 

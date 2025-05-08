@@ -316,6 +316,30 @@ export class Griever {
     this.animateEyes(delta);
   }
 
+  // Simplified update for distant grievers to improve performance
+  updateSimple(delta) {
+    // Only perform minimal updates when griever is far from player
+    // This saves significant CPU by skipping complex path finding and collision checks
+
+    // Update animations for visual consistency
+    this.animateEyes(delta);
+
+    // Simple wandering behavior
+    if (Math.random() < 0.01) {
+      // Occasionally change direction
+      this.mesh.rotation.y += (Math.random() - 0.5) * Math.PI * 0.5;
+    }
+
+    // Update timers
+    this.alertTime += delta;
+
+    // If it's been in alert state too long, go back to patrol
+    if (this.state === "alert" && this.alertTime > this.alertDuration) {
+      this.state = "patrol";
+      this.alertTime = 0;
+    }
+  }
+
   updatePatrolMovement(delta) {
     // Get new patrol target if needed
     if (!this.patrolTarget || this.position.distanceTo(this.patrolTarget) < 1) {

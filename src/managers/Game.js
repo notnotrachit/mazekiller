@@ -25,6 +25,14 @@ export class Game {
     this.clock = new THREE.Clock();
     this.frameRateLimit = 60; // Target frame rate
     this.lastTime = 0;
+    this.lastRenderTime = 0; // Initialize lastRenderTime to fix gray screen issue
+    this.frameCount = 0; // Initialize frameCount here
+
+    // FPS counter
+    this.fpsDisplayEnabled = false;
+    this.fpsUpdateInterval = 0.5; // Update FPS display every 0.5 seconds
+    this.fpsTimer = 0;
+    this.framesSinceLastFPSUpdate = 0;
 
     // Create camera
     this.camera = new THREE.PerspectiveCamera(
@@ -126,6 +134,7 @@ export class Game {
       onEscape: () => this.handleEscapeKey(),
       onInteract: () => this.checkInteractions(),
       onToggleMinimap: () => this.toggleMinimap(),
+      onToggleFPS: () => this.toggleFPSDisplay(),
     });
 
     // Set up cinematic completion event
@@ -582,7 +591,7 @@ export class Game {
     return Utils.generateRandomPositions(count, maze, mazeSize, cellSize);
   }
 
-  // Animation loop
+  // Animation loop optimized for better performance
   animate() {
     // Continue animation loop
     requestAnimationFrame(() => this.animate());
@@ -593,16 +602,19 @@ export class Game {
       return;
     }
 
-    // Get precise delta time
+    // Get precise delta time using performance.now for better accuracy
     const now = performance.now();
-    const elapsed = now - this.lastTime;
-
     // Calculate delta time in seconds, capped at 100ms to prevent huge jumps
-    const delta = Math.min(elapsed / 1000, 0.1);
+    const delta = Math.min((now - this.lastTime) / 1000, 0.1);
     this.lastTime = now;
 
-    // Update minimap with current game state if enabled
-    this.updateMinimap();
+    // Increment frame counter for staggered updates
+    this.frameCount = (this.frameCount || 0) + 1;
+
+    // Update FPS counter regardless of game state
+    if (this.fpsDisplayEnabled) {
+      this.updateFPSCounter(delta);
+    }
 
     // Always render even if game hasn't started to prevent black screen
     if (this.gameState.gameStarted) {
@@ -611,7 +623,7 @@ export class Game {
 
       // Only process gameplay when not paused or game over
       if (!this.gameState.gameOver && !this.gameState.gamePaused) {
-        // Update time UI
+        // Update time UI every frame for accuracy
         this.ui.updateTimerDisplay();
 
         // Check for time up
@@ -620,15 +632,19 @@ export class Game {
           return;
         }
 
-        // Update environment based on time
-        const environmentStatus = this.gameWorld.updateTimeOfDay(
-          this.gameState.elapsedTime / 1000
-        );
-        this.gameState.environmentStatus = environmentStatus;
+        // Update environment based on time - every 15 frames is enough
+        if (this.frameCount % 15 === 0) {
+          const environmentStatus = this.gameWorld.updateTimeOfDay(
+            this.gameState.elapsedTime / 1000
+          );
+          this.gameState.environmentStatus = environmentStatus;
+        }
 
-        // Update visual effects
-        this.ui.updateTimeWarningOverlay();
-        this.ui.updateInfectionOverlay(this.player.infection);
+        // Update visual effects every 5 frames for better performance
+        if (this.frameCount % 5 === 0) {
+          this.ui.updateTimeWarningOverlay();
+          this.ui.updateInfectionOverlay(this.player.infection);
+        }
 
         // Cycle objectives periodically
         this.gameState.objectiveTimer += delta;
@@ -658,35 +674,38 @@ export class Game {
           console.error("[DEBUG] Error in player update:", error);
         }
 
-        // Update game world
+        // Update game world (already has internal staggering)
         this.gameWorld.update(delta);
 
         // Update collectibles with frustum culling
         try {
-          const frustum = new THREE.Frustum();
-          const matrix = new THREE.Matrix4().multiplyMatrices(
-            this.camera.projectionMatrix,
-            this.camera.matrixWorldInverse
-          );
-          frustum.setFromProjectionMatrix(matrix);
+          // Only need frustum calculation every few frames
+          const useFrustum = this.frameCount % 3 === 0;
+          let frustum = null;
+
+          if (useFrustum) {
+            frustum = new THREE.Frustum();
+            const matrix = new THREE.Matrix4().multiplyMatrices(
+              this.camera.projectionMatrix,
+              this.camera.matrixWorldInverse
+            );
+            frustum.setFromProjectionMatrix(matrix);
+          }
+
           this.collectibles.update(delta, frustum);
         } catch (error) {
           console.error("[DEBUG] Error in collectibles update:", error);
         }
 
-        // Update grievers
-        const playerPosition = this.player.getPosition();
-        const grievers = this.entityManager.getGrievers();
-        const isProcessingMany =
-          this.gameWorld.collectionEffectsQueue?.length > 0 ||
-          this.collectibles.noteCollectionQueue?.length > 0;
-
         // Process grievers
+        const playerPosition = this.player.getPosition();
+
+        // Optimize griever processing at a reduced rate
         const grieverProcessResult = this.entityManager.updateGrievers(
           delta,
           playerPosition,
           this.gameState.environmentStatus,
-          isProcessingMany,
+          false,
           this.gameState.serumCollected
         );
 
@@ -695,43 +714,44 @@ export class Game {
           grieverProcessResult.playerWasHit &&
           grieverProcessResult.damage > 0
         ) {
-          // Apply damage to player
           const playerDied = this.player.takeDamage(
             grieverProcessResult.damage
           );
-
-          // If player health reaches zero, they die
           if (playerDied) {
             this.gameLose("griever");
             return;
           }
         }
 
-        // Check if player was killed by a griever
-        if (grieverProcessResult.playerDied) {
-          this.gameLose("griever");
-          return;
-        }
-
-        // Check for key collection
+        // Check for player collecting keys
         if (this.gameWorld.checkKeyCollection(playerPosition)) {
-          this.gameState.incrementSerum();
+          console.log("[DEBUG] Key collected!");
+          this.gameState.serumCollected++;
           this.ui.updateSerumCountDisplay();
+          this.soundManager.play("collect");
 
-          // Show new objective notification when collecting first serum
-          if (this.gameState.serumCollected === 1) {
-            setTimeout(() => {
-              this.storyManager.showObjectiveNotification(
-                "Collect 3 serum vials to activate the exit portal"
-              );
-            }, 2000);
+          // Update the objective if needed
+          if (this.gameState.currentObjective === "collect") {
+            this.gameState.cycleObjective();
+            this.ui.updateObjectiveDisplay();
           }
-
-          // Slow infection when collecting serum
-          this.player.reduceInfection(15);
         }
 
-        // Check if player reached exit
+        // Check for note collection
+        const collisionResult =
+          this.collectibles.checkCollisions(playerPosition);
+        if (collisionResult.note) {
+          console.log("[DEBUG] Note found:", collisionResult.note);
+          // Show note in UI
+          this.ui.showNoteContent(collisionResult.note);
+        }
+
+        // Update minimap only every 3rd frame to reduce overhead
+        if (this.frameCount % 3 === 0) {
+          this.updateMinimap();
+        }
+
+        // Check if player has reached the exit with enough keys
         if (
           this.gameWorld.checkExit(
             playerPosition,
@@ -739,11 +759,63 @@ export class Game {
           )
         ) {
           this.gameWin();
+          return;
         }
       }
     }
 
-    // Render the scene
+    // Render the scene - remove frame limiting as it's causing more harm than good
     this.renderer.render(this.scene, this.camera);
+  }
+
+  // Toggle FPS counter display
+  toggleFPSDisplay() {
+    this.fpsDisplayEnabled = !this.fpsDisplayEnabled;
+    const fpsCounter = document.getElementById("fps-counter");
+
+    if (fpsCounter) {
+      if (this.fpsDisplayEnabled) {
+        fpsCounter.classList.remove("hidden");
+        // Show notification that FPS counter is enabled
+        this.showCheatNotification("FPS Counter Enabled");
+      } else {
+        fpsCounter.classList.add("hidden");
+        // Show notification that FPS counter is disabled
+        this.showCheatNotification("FPS Counter Disabled");
+      }
+    }
+  }
+
+  // Update FPS counter
+  updateFPSCounter(delta) {
+    // Count frames for FPS calculation
+    this.framesSinceLastFPSUpdate++;
+    this.fpsTimer += delta;
+
+    // Update FPS display at specified interval
+    if (this.fpsTimer >= this.fpsUpdateInterval) {
+      const fps = Math.round(this.framesSinceLastFPSUpdate / this.fpsTimer);
+      const fpsCounter = document.getElementById("fps-counter");
+
+      if (fpsCounter) {
+        // Update the counter text
+        fpsCounter.textContent = `FPS: ${fps}`;
+
+        // Update color based on performance
+        fpsCounter.classList.remove("fps-good", "fps-medium", "fps-bad");
+
+        if (fps >= 50) {
+          fpsCounter.classList.add("fps-good");
+        } else if (fps >= 30) {
+          fpsCounter.classList.add("fps-medium");
+        } else {
+          fpsCounter.classList.add("fps-bad");
+        }
+      }
+
+      // Reset counters
+      this.framesSinceLastFPSUpdate = 0;
+      this.fpsTimer = 0;
+    }
   }
 }

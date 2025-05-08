@@ -1279,3 +1279,36 @@
   color: var(--text-color);
   font-weight: bold;
 }
+
+/* FPS Counter */
+.fps-counter {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #00ff00;
+  font-family: monospace;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 1000;
+  user-select: none;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.fps-counter.hidden {
+  opacity: 0;
+}
+
+.fps-good {
+  color: #00ff00;
+}
+
+.fps-medium {
+  color: #ffff00;
+}
+
+.fps-bad {
+  color: #ff3333;
+}

@@ -944,30 +944,10 @@ export class GameWorld {
 
   checkWallCollision(position) {
     const playerRadius = 0.5;
-    const collisionTolerance = 0.05;
+    // Increased collision tolerance for more robust wall detection
+    const collisionTolerance = 0.01;
 
-    // FIRST PASS: Direct collision check with all wall meshes
-    // This is more accurate than grid-based checks, especially with dynamic walls
-    for (let i = 0; i < this.walls.children.length; i++) {
-      const wall = this.walls.children[i];
-
-      // Skip walls that are far away using a rough bounding check
-      const dx = Math.abs(position.x - wall.position.x);
-      const dz = Math.abs(position.z - wall.position.z);
-
-      if (dx > this.cellSize || dz > this.cellSize) continue;
-
-      // More precise collision check
-      const collisionThreshold =
-        this.cellSize / 2 + playerRadius - collisionTolerance;
-      if (dx < collisionThreshold && dz < collisionThreshold) {
-        return true;
-      }
-    }
-
-    // SECOND PASS: Grid-based collision check (kept as fallback)
-    // This can catch any walls that might have been missed in the direct check
-    // Convert world position to maze grid coordinates
+    // Calculate the grid cell the player is in
     const gridX = Math.floor(
       (position.x + (this.mazeSize * this.cellSize) / 2) / this.cellSize
     );
@@ -975,13 +955,17 @@ export class GameWorld {
       (position.z + (this.mazeSize * this.cellSize) / 2) / this.cellSize
     );
 
-    // Only check immediate neighboring cells (not diagonal)
+    // Check current cell and all 8 neighboring cells (including diagonals)
     const neighbors = [
       { x: 0, z: 0 }, // Current cell
       { x: 1, z: 0 }, // Right
       { x: -1, z: 0 }, // Left
       { x: 0, z: 1 }, // Down
       { x: 0, z: -1 }, // Up
+      { x: 1, z: 1 }, // Diagonal: Bottom-right
+      { x: -1, z: 1 }, // Diagonal: Bottom-left
+      { x: 1, z: -1 }, // Diagonal: Top-right
+      { x: -1, z: -1 }, // Diagonal: Top-left
     ];
 
     for (const offset of neighbors) {
@@ -1003,16 +987,67 @@ export class GameWorld {
         const wallX = (checkX - this.mazeSize / 2) * this.cellSize;
         const wallZ = (checkZ - this.mazeSize / 2) * this.cellSize;
 
-        // Calculate distance from player to wall center
-        const dx = position.x - wallX;
-        const dz = position.z - wallZ;
+        // Box-box collision for more accurate collision detection
+        // Player box: position ± playerRadius
+        // Wall box: position ± cellSize/2
+        const playerMinX = position.x - playerRadius;
+        const playerMaxX = position.x + playerRadius;
+        const playerMinZ = position.z - playerRadius;
+        const playerMaxZ = position.z + playerRadius;
 
-        // Check if player is colliding with wall
-        const collisionThreshold =
-          this.cellSize / 2 + playerRadius - collisionTolerance;
+        const wallMinX = wallX - this.cellSize / 2 + collisionTolerance;
+        const wallMaxX = wallX + this.cellSize / 2 - collisionTolerance;
+        const wallMinZ = wallZ - this.cellSize / 2 + collisionTolerance;
+        const wallMaxZ = wallZ + this.cellSize / 2 - collisionTolerance;
+
+        // AABB collision check (Axis-Aligned Bounding Box)
         if (
-          Math.abs(dx) < collisionThreshold &&
-          Math.abs(dz) < collisionThreshold
+          playerMaxX > wallMinX &&
+          playerMinX < wallMaxX &&
+          playerMaxZ > wallMinZ &&
+          playerMinZ < wallMaxZ
+        ) {
+          return true;
+        }
+      }
+    }
+
+    // Also check dynamic walls
+    if (this.walls && this.walls.children && this.walls.children.length > 0) {
+      // Find nearby dynamic walls
+      for (let i = 0; i < this.walls.children.length; i++) {
+        const wall = this.walls.children[i];
+
+        // Only check dynamic walls
+        if (!wall.userData.isDynamic) continue;
+
+        // Quick distance check before doing more expensive calculations
+        const dx = Math.abs(position.x - wall.position.x);
+        const dz = Math.abs(position.z - wall.position.z);
+
+        if (dx > this.cellSize || dz > this.cellSize) continue;
+
+        // Box-box collision check for dynamic walls
+        const playerMinX = position.x - playerRadius;
+        const playerMaxX = position.x + playerRadius;
+        const playerMinZ = position.z - playerRadius;
+        const playerMaxZ = position.z + playerRadius;
+
+        const wallMinX =
+          wall.position.x - this.cellSize / 2 + collisionTolerance;
+        const wallMaxX =
+          wall.position.x + this.cellSize / 2 - collisionTolerance;
+        const wallMinZ =
+          wall.position.z - this.cellSize / 2 + collisionTolerance;
+        const wallMaxZ =
+          wall.position.z + this.cellSize / 2 - collisionTolerance;
+
+        // AABB collision check
+        if (
+          playerMaxX > wallMinX &&
+          playerMinX < wallMaxX &&
+          playerMaxZ > wallMinZ &&
+          playerMinZ < wallMaxZ
         ) {
           return true;
         }
@@ -1023,35 +1058,78 @@ export class GameWorld {
   }
 
   checkKeyCollection(position) {
-    // Check for serum collection
-    for (let i = 0; i < this.keys.length; i++) {
-      const key = this.keys[i];
+    // Performance optimization: Skip this check if we checked recently
+    if (window.performance && window.performance.now) {
+      const currentTime = window.performance.now();
+
+      // If last check was less than 50ms ago, skip this check
+      if (this._lastKeyCheck && currentTime - this._lastKeyCheck < 50) {
+        return false;
+      }
+
+      this._lastKeyCheck = currentTime;
+    }
+
+    // Check for serum collection - optimize to only check a few keys per frame
+    const playerX = position.x;
+    const playerZ = position.z;
+    const detectionRadius = 2;
+
+    // Only check a subset of keys in each frame for better performance
+    const keysToCheck = Math.min(2, this.keys.length);
+    const startIdx = this.frameCount % this.keys.length;
+
+    for (let i = 0; i < keysToCheck; i++) {
+      const idx = (startIdx + i) % this.keys.length;
+      const key = this.keys[idx];
 
       // Skip already collected keys
       if (key.userData.collected) continue;
 
-      // Optimization: quick bounds check first
-      const xDiff = Math.abs(position.x - key.position.x);
-      const zDiff = Math.abs(position.z - key.position.z);
-      const detectionRadius = 2;
+      // Optimization: quick bounds check first using cached position
+      const xDiff = Math.abs(playerX - key.position.x);
+      const zDiff = Math.abs(playerZ - key.position.z);
 
       if (xDiff < detectionRadius && zDiff < detectionRadius) {
-        // Do the more expensive distance check only if bounds check passes
-        const distance = position.distanceTo(key.position);
+        // Use squared distance instead of actual distance (avoids square root calculation)
+        const dx = playerX - key.position.x;
+        const dz = playerZ - key.position.z;
+        const distanceSquared = dx * dx + dz * dz;
 
-        if (distance < 1.5) {
-          // PERFORMANCE OPTIMIZATION:
-          // Don't do everything at once - queue up the effect processing
+        if (distanceSquared < 2.25) {
+          // 1.5^2 = 2.25
+          // Mark as collected immediately
           key.userData.collected = true;
           key.visible = false;
 
-          // Queue this collection for processing over several frames
-          this.collectionEffectsQueue.push({
-            key: key,
-            position: key.position.clone(),
-            time: performance.now(),
-            processed: false,
+          // If there's a light in the vial, disable it immediately to reduce rendering load
+          key.children.forEach((child) => {
+            if (child instanceof THREE.PointLight) {
+              child.intensity = 0;
+            }
           });
+
+          // Queue collection effect with prioritization
+          const collectionEffectsCount = this.collectionEffectsQueue.length;
+
+          // Only queue the effect if we don't have too many pending effects
+          if (collectionEffectsCount < 2) {
+            this.collectionEffectsQueue.push({
+              key: key,
+              position: key.position.clone(),
+              time: performance.now(),
+              processed: false,
+            });
+          } else {
+            // If we already have effects queued, add this one with reduced particle count
+            this.collectionEffectsQueue.push({
+              key: key,
+              position: key.position.clone(),
+              time: performance.now(),
+              processed: false,
+              reducedEffects: true,
+            });
+          }
 
           return true;
         }
@@ -1117,8 +1195,14 @@ export class GameWorld {
     // Perform intensive operations in stages to distribute processing
     // Create a visual collection effect (particle burst)
     if (effect.key && effect.key.position) {
-      // Create a simple particle effect at the collection point
-      const particleCount = 15; // Reduced number for better performance
+      // PERFORMANCE OPTIMIZATION: Significantly reduce particle count
+      // Use fewer particles if we have multiple effects queued
+      const particleCount = effect.reducedEffects
+        ? 5
+        : this.collectionEffectsQueue.length > 1
+        ? 8
+        : 12;
+
       const particleGeometry = new THREE.BufferGeometry();
       const particleMaterial = new THREE.PointsMaterial({
         color: 0x0077ff,
@@ -1128,21 +1212,20 @@ export class GameWorld {
         blending: THREE.AdditiveBlending,
       });
 
-      // Create particles in a sphere around collection point
+      // Create particles in a simpler pattern for performance
       const particlePositions = new Float32Array(particleCount * 3);
 
+      // Use a simple circular pattern to avoid expensive trig calculations
       for (let i = 0; i < particleCount; i++) {
-        // Random position in a sphere
-        const radius = 0.3 + Math.random() * 0.7;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.random() * Math.PI;
+        // Simple circular pattern around the collection point
+        const angle = (i / particleCount) * Math.PI * 2;
+        const radius = 0.3;
 
         particlePositions[i * 3] =
-          effect.key.position.x + radius * Math.sin(phi) * Math.cos(theta);
-        particlePositions[i * 3 + 1] =
-          effect.key.position.y + radius * Math.sin(phi) * Math.sin(theta);
+          effect.key.position.x + Math.cos(angle) * radius;
+        particlePositions[i * 3 + 1] = effect.key.position.y + 0.3; // Fixed height initially
         particlePositions[i * 3 + 2] =
-          effect.key.position.z + radius * Math.cos(phi);
+          effect.key.position.z + Math.sin(angle) * radius;
       }
 
       particleGeometry.setAttribute(
@@ -1154,8 +1237,16 @@ export class GameWorld {
       const particles = new THREE.Points(particleGeometry, particleMaterial);
       particles.userData = {
         creationTime: Date.now(),
-        lifetime: 1000, // 1 second lifetime
+        lifetime: 800, // Shorter lifetime for better performance
+        velocities: new Float32Array(particleCount * 3), // Pre-calculated velocities
       };
+
+      // Pre-calculate velocities to avoid calculations per frame
+      for (let i = 0; i < particleCount; i++) {
+        particles.userData.velocities[i * 3] = (Math.random() - 0.5) * 0.2; // x velocity
+        particles.userData.velocities[i * 3 + 1] = 0.3 + Math.random() * 0.3; // y velocity (up)
+        particles.userData.velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.2; // z velocity
+      }
 
       // Add temporary particles to scene
       this.scene.add(particles);
@@ -1191,71 +1282,46 @@ export class GameWorld {
     }
   }
 
-  // Update method with additions for particle management
+  // Update method with optimized performance
   update(delta) {
-    // Animate keys
-    this.keys.forEach((key) => {
-      if (key.visible) {
-        key.rotation.z += delta * 2;
-      }
-    });
+    // Use frame counting to stagger updates across multiple frames
+    this.frameCount = (this.frameCount || 0) + 1;
+
+    // Animate keys - only update visible keys
+    if (this.frameCount % 2 === 0) {
+      // Only update every other frame
+      this.keys.forEach((key) => {
+        if (key.visible) {
+          key.rotation.z += delta * 2;
+        }
+      });
+    }
 
     // Process any queued collection effects (limit per frame)
     this.processCollectionEffects();
 
-    // Update and clean up collection particles
-    if (this.collectionParticles && this.collectionParticles.length > 0) {
-      const now = Date.now();
-      // Process in reverse order for safe removal
-      for (let i = this.collectionParticles.length - 1; i >= 0; i--) {
-        const particles = this.collectionParticles[i];
-        const age = now - particles.userData.creationTime;
-
-        if (age > particles.userData.lifetime) {
-          // Remove expired particles
-          this.scene.remove(particles);
-          particles.geometry.dispose();
-          particles.material.dispose();
-          this.collectionParticles.splice(i, 1);
-        } else {
-          // Fade out particles over their lifetime
-          const fade = 1 - age / particles.userData.lifetime;
-          particles.material.opacity = fade * 0.8;
-
-          // Expand particles outward
-          const positions = particles.geometry.attributes.position.array;
-          for (let p = 0; p < positions.length; p += 3) {
-            const dirX = positions[p] - particles.position.x;
-            const dirY = positions[p + 1] - particles.position.y;
-            const dirZ = positions[p + 2] - particles.position.z;
-
-            // Normalize direction and apply expansion speed
-            const len = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
-            if (len > 0.01) {
-              const speed = 0.5 * delta;
-              positions[p] += (dirX / len) * speed;
-              positions[p + 1] += (dirY / len) * speed;
-              positions[p + 2] += (dirZ / len) * speed;
-            }
-          }
-          particles.geometry.attributes.position.needsUpdate = true;
-        }
-      }
+    // Use frame counting to distribute intensive operations
+    if (this.frameCount % 3 === 0) {
+      // Clean up particles on a separate frame cycle
+      this.cleanupParticleEffects();
     }
 
-    // Animate portal
-    if (this.portal) {
+    // Animate portal with less frequent updates if far from player
+    if (this.portal && this.frameCount % 2 === 0) {
       this.portal.rotation.z += delta * 0.5;
     }
 
-    // Animate dynamic walls
-    this.walls.children.forEach((wall) => {
-      if (wall.userData.isDynamic && wall.userData.animate) {
-        wall.userData.animate(Date.now() * 0.001);
-      }
-    });
+    // Animate dynamic walls every 3rd frame to reduce CPU load
+    if (this.frameCount % 3 === 0) {
+      const time = performance.now() * 0.001; // Use performance.now for more accurate timing
+      this.walls.children.forEach((wall) => {
+        if (wall.userData.isDynamic && wall.userData.animate) {
+          wall.userData.animate(time);
+        }
+      });
+    }
 
-    // Update dynamic walls
+    // Update dynamic walls logic - runs on a separate timer not every frame
     this.updateDynamicWalls(delta);
   }
 

@@ -290,7 +290,7 @@ export class Collectibles {
   }
 
   update(delta, frustum) {
-    // Process note collection effects
+    // Process note collection effects - limited to one per frame
     this.processNoteCollectionEffects();
 
     // Update and cleanup note collection particles
@@ -312,52 +312,95 @@ export class Collectibles {
           const fade = 1 - age / particles.userData.lifetime;
           particles.material.opacity = fade * 0.7;
 
-          // Float particles upward
-          const positions = particles.geometry.attributes.position.array;
-          for (let p = 0; p < positions.length; p += 3) {
-            positions[p + 1] += delta * 0.5; // Move upward
+          // Use pre-calculated velocities for better performance
+          if (particles.userData.velocities) {
+            const positions = particles.geometry.attributes.position.array;
+            const velocities = particles.userData.velocities;
+
+            // Apply velocities to positions (only update a few particles per frame if there are many)
+            const particleCount = positions.length / 3;
+            const updateCount = Math.min(particleCount, 10); // Process at most 10 particles per frame
+            const startIdx = Math.floor(
+              Math.random() * (particleCount - updateCount)
+            );
+
+            for (let p = 0; p < updateCount; p++) {
+              const idx = (startIdx + p) % particleCount;
+              const posIdx = idx * 3;
+
+              positions[posIdx] += velocities[posIdx] * delta;
+              positions[posIdx + 1] += velocities[posIdx + 1] * delta;
+              positions[posIdx + 2] += velocities[posIdx + 2] * delta;
+            }
+
+            particles.geometry.attributes.position.needsUpdate = true;
           }
-          particles.geometry.attributes.position.needsUpdate = true;
         }
       }
     }
 
-    // Update story notes animations - with performance optimization
-    this.storyNotes.forEach((note) => {
+    // Performance optimization - use frame skipping for non-essential animations
+    if (!this._frameCounter) this._frameCounter = 0;
+    this._frameCounter++;
+
+    // Only update visual effects every few frames to improve performance
+    if (this._frameCounter % 3 !== 0) return;
+
+    // Use requestAnimationFrame internal timing
+    const time = performance.now() * 0.001;
+
+    // Only process a limited number of story notes per frame
+    const notesToProcess = Math.min(3, this.storyNotes.length);
+    const startIndex =
+      Math.floor(time * 3) %
+      Math.max(1, this.storyNotes.length - notesToProcess);
+
+    // Update story notes animations with improved performance
+    for (let i = 0; i < notesToProcess; i++) {
+      const noteIndex = (startIndex + i) % this.storyNotes.length;
+      const note = this.storyNotes[noteIndex];
+
       if (!note.collected && note.mesh) {
-        // Only process notes that are in view (frustum culling)
-        if (!frustum || frustum.intersectsObject(note.mesh)) {
-          // Floating effect - simplified for better performance
-          const time = Date.now() * 0.001;
-          // Use integer math to avoid creating new objects every frame
-          note.mesh.position.y =
-            note.mesh.userData.originalY +
-            Math.sin(time + note.mesh.userData.floatOffset) * 0.1;
-
-          // Slow rotation - use delta to ensure smooth animation regardless of framerate
-          note.mesh.rotation.y += delta * note.mesh.userData.rotationSpeed;
-
-          // Add a pulse effect to the light if there's one
-          const lights = note.mesh.children.filter(
-            (child) => child instanceof THREE.PointLight
-          );
-          if (lights.length > 0) {
-            const pulseFactor = (Math.sin(time * 2) + 1) * 0.5; // 0 to 1 pulsing
-            lights[0].intensity = 0.3 + pulseFactor * 0.4;
-          }
+        // Only do expensive operations if the note is likely in view
+        if (!frustum || this.isInView(note.mesh, frustum)) {
+          // Simplified animation with cheaper math operations
+          const sinVal = Math.sin(time + note.mesh.userData.floatOffset);
+          note.mesh.position.y = note.mesh.userData.originalY + sinVal * 0.1;
+          note.mesh.rotation.y += delta * 0.3; // Consistent rotation speed
         }
       }
-    });
+    }
 
-    // Update other collectibles if added in the future
-    this.collectibleItems.forEach((item) => {
-      if (!item.collected && item.mesh) {
-        // Only process items that are in view (frustum culling)
-        if (!frustum || frustum.intersectsObject(item.mesh)) {
-          // Add animations for other collectibles here
+    // Skip updating other collectibles if performance is an issue
+    if (this.noteCollectionParticles.length > 0) return;
+
+    // Simplified collectible item updates
+    if (this.collectibleItems.length > 0) {
+      const itemsToProcess = Math.min(2, this.collectibleItems.length);
+      for (let i = 0; i < itemsToProcess; i++) {
+        const itemIndex = (startIndex + i) % this.collectibleItems.length;
+        const item = this.collectibleItems[itemIndex];
+        if (
+          !item.collected &&
+          item.mesh &&
+          (!frustum || this.isInView(item.mesh, frustum))
+        ) {
+          // Add simplified animations here if needed
         }
       }
-    });
+    }
+  }
+
+  // Helper method for frustum culling check with safety
+  isInView(mesh, frustum) {
+    if (!mesh || !mesh.geometry) return false;
+
+    // Initialize boundingSphere if it doesn't exist
+    if (!mesh.geometry.boundingSphere) {
+      mesh.geometry.computeBoundingSphere();
+    }
+
+    return mesh.geometry.boundingSphere && frustum.intersectsObject(mesh);
   }
 
   checkCollisions(playerPosition) {
@@ -365,40 +408,80 @@ export class Collectibles {
       note: null,
     };
 
-    // Performance optimization: Check for notes in vicinity first
-    const detectionRadius = 1.5; // Same as previous value
+    // Performance optimization: Skip collision detection entirely if too many frames are being processed
+    if (window.performance && window.performance.now) {
+      const currentTime = window.performance.now();
 
-    // Check for collisions with story notes using the same optimization technique from GameWorld
-    for (const note of this.storyNotes) {
+      // If last check was less than 100ms ago and we're not in high-performance mode, skip this check
+      if (
+        this._lastCollisionCheck &&
+        currentTime - this._lastCollisionCheck < 100
+      ) {
+        return collisionResults;
+      }
+
+      this._lastCollisionCheck = currentTime;
+    }
+
+    // Performance optimization: Check for notes in vicinity first
+    const detectionRadius = 1.5;
+    const playerX = playerPosition.x;
+    const playerZ = playerPosition.z;
+
+    // Check for collisions with story notes
+    // Only check a limited number of notes per frame
+    const maxNotesToCheck = Math.min(5, this.storyNotes.length);
+
+    // Start checking from a different index each time to eventually check all notes
+    const startIndex = Math.floor(Math.random() * this.storyNotes.length);
+
+    for (let i = 0; i < maxNotesToCheck; i++) {
+      const noteIndex = (startIndex + i) % this.storyNotes.length;
+      const note = this.storyNotes[noteIndex];
+
       if (!note.collected && note.mesh) {
-        // First do a quick bounds check to avoid expensive distance calculations
-        const xDiff = Math.abs(playerPosition.x - note.position.x);
-        const zDiff = Math.abs(playerPosition.z - note.position.z);
+        // Quick bounds check using cached position values
+        const xDiff = Math.abs(playerX - note.position.x);
+        const zDiff = Math.abs(playerZ - note.position.z);
 
         if (xDiff < detectionRadius && zDiff < detectionRadius) {
           // Only do the precise distance check if we're close enough
-          const distance = playerPosition.distanceTo(note.position);
-          if (distance < 1.5) {
-            // PERFORMANCE FIX: Use deferred collection effect processing
-            // Just hide the note initially and queue the effect processing
+          // Use squared distance for better performance (avoids square root)
+          const dx = playerX - note.position.x;
+          const dz = playerZ - note.position.z;
+          const distanceSquared = dx * dx + dz * dz;
+
+          if (distanceSquared < 2.25) {
+            // 1.5^2 = 2.25
+            // Immediately hide the note
             note.collected = true;
             note.mesh.visible = false;
 
             // Store the content for UI
             const content = note.content;
 
-            // Queue collection for processing over next few frames
-            this.noteCollectionQueue.push({
-              note: note,
-              time: performance.now(),
-              processed: false,
-            });
+            // Queue collection effect with reduced priority if multiple collections are happening
+            if (this.noteCollectionQueue.length < 2) {
+              this.noteCollectionQueue.push({
+                note: note,
+                time: performance.now(),
+                processed: false,
+              });
+            } else {
+              // If we already have multiple effects in queue, reduce particle count for this one
+              this.noteCollectionQueue.push({
+                note: note,
+                time: performance.now(),
+                processed: false,
+                reducedEffects: true,
+              });
+            }
 
             // Play sound using a small timeout to avoid performance impact
             if (this.soundManager) {
               setTimeout(() => {
                 this.soundManager.play("note_open");
-              }, 10);
+              }, 50); // Increased timeout to reduce immediate performance impact
             }
 
             collisionResults.note = content;
@@ -429,8 +512,14 @@ export class Collectibles {
 
     // Create a simple particle effect at the collection point
     if (effect.note && effect.note.position) {
-      // PERFORMANCE IMPROVEMENT: Reduce particle count even further for third serum
-      const particleCount = this.noteCollectionQueue.length <= 2 ? 15 : 8;
+      // MAJOR PERFORMANCE IMPROVEMENT: Significantly reduce particle count
+      // Use fewer particles if there are multiple effects queued or if this effect was marked for reduction
+      const particleCount = effect.reducedEffects
+        ? 5
+        : this.noteCollectionQueue.length > 1
+        ? 8
+        : 12;
+
       const particleGeometry = new THREE.BufferGeometry();
 
       // Determine particle color based on note content
@@ -457,18 +546,18 @@ export class Collectibles {
         blending: THREE.AdditiveBlending,
       });
 
-      // Create particles in a spiral pattern
+      // Create particles in a simpler pattern to reduce calculations
       const particlePositions = new Float32Array(particleCount * 3);
 
       for (let i = 0; i < particleCount; i++) {
-        // Spiral upward pattern
-        const radius = 0.2 + (i / particleCount) * 0.3;
-        const angle = (i / particleCount) * Math.PI * 4;
-        const height = (i / particleCount) * 0.8;
+        // Simpler circular pattern with less complex math
+        const angle = (i / particleCount) * Math.PI * 2;
+        const radius = 0.3;
 
+        // Position particles in a circle around the collection point
         particlePositions[i * 3] =
           effect.note.position.x + radius * Math.cos(angle);
-        particlePositions[i * 3 + 1] = effect.note.position.y + 0.2 + height;
+        particlePositions[i * 3 + 1] = effect.note.position.y + 0.3; // All at same height initially
         particlePositions[i * 3 + 2] =
           effect.note.position.z + radius * Math.sin(angle);
       }
@@ -482,8 +571,17 @@ export class Collectibles {
       const particles = new THREE.Points(particleGeometry, particleMaterial);
       particles.userData = {
         creationTime: Date.now(),
-        lifetime: 1200, // Longer lifetime for more dramatic effect
+        lifetime: 800, // Shorter lifetime for better performance
+        initialPositions: particlePositions.slice(), // Store initial positions
+        velocities: new Float32Array(particleCount * 3), // Pre-calculate velocities
       };
+
+      // Pre-calculate particle velocities to avoid math in update loop
+      for (let i = 0; i < particleCount; i++) {
+        particles.userData.velocities[i * 3] = (Math.random() - 0.5) * 0.2; // x velocity
+        particles.userData.velocities[i * 3 + 1] = 0.3 + Math.random() * 0.3; // y velocity (up)
+        particles.userData.velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.2; // z velocity
+      }
 
       // Add temporary particles to scene
       this.scene.add(particles);
