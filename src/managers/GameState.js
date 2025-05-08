@@ -15,7 +15,7 @@ export class GameState {
       noteReading: false,
       startTime: 0,
       elapsedTime: 0,
-      pausedTime: 0,     // Total time spent paused
+      pausedTime: 0, // Total time spent paused
       pauseStartTime: 0, // Timestamp when pause begins
       timeLimit: 300, // 5 minutes in seconds
       objectives: [
@@ -154,7 +154,8 @@ export class GameState {
         return this.state.elapsedTime;
       } else {
         // When active, subtract the total paused time from the calculation
-        this.state.elapsedTime = Date.now() - this.state.startTime - this.state.pausedTime;
+        this.state.elapsedTime =
+          Date.now() - this.state.startTime - this.state.pausedTime;
       }
     }
     return this.state.elapsedTime;
@@ -215,8 +216,8 @@ export class GameState {
     this.state.gamePaused = false;
     this.state.startTime = Date.now();
     this.state.elapsedTime = 0;
-    this.state.pausedTime = 0;      // Reset paused time tracking
-    this.state.pauseStartTime = 0;  // Reset pause start timestamp
+    this.state.pausedTime = 0; // Reset paused time tracking
+    this.state.pauseStartTime = 0; // Reset pause start timestamp
     this.state.currentObjective = 0;
     this.state.objectiveTimer = 0;
     // Don't reset difficulty as that should persist

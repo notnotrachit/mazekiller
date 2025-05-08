@@ -51,11 +51,11 @@ export class GameWorld {
   }
 
   initialize() {
-    // Set darker fog for atmosphere
-    this.scene.fog = new THREE.FogExp2(0x080808, this.fogDensity);
+    // Set lighter fog for better visibility
+    this.scene.fog = new THREE.FogExp2(0x353540, this.fogDensity * 0.6);
 
-    // Add global ambient light for better visibility
-    this.globalAmbient = new THREE.AmbientLight(0xafc3c7, 0.8);
+    // Add global ambient light with increased intensity for better visibility
+    this.globalAmbient = new THREE.AmbientLight(0xffffff, 1.2);
     this.scene.add(this.globalAmbient);
 
     // Create ground
@@ -682,17 +682,44 @@ export class GameWorld {
   }
 
   setupNightLighting() {
-    // Add moon light (brighter than before)
-    this.moonLight = new THREE.DirectionalLight(0x8888ff, 0.5);
+    // Add moon light with increased brightness
+    this.moonLight = new THREE.DirectionalLight(0x8888ff, 1.0);
     this.moonLight.position.set(0, 10, -10).normalize();
     this.moonLight.castShadow = true;
     this.moonLight.shadow.mapSize.width = 1024;
     this.moonLight.shadow.mapSize.height = 1024;
     this.scene.add(this.moonLight);
 
-    // Add ambient night light (brighter than before)
-    this.nightAmbient = new THREE.AmbientLight(0x334455, 0.4);
+    // Add ambient night light with increased intensity
+    this.nightAmbient = new THREE.AmbientLight(0x556677, 0.7);
     this.scene.add(this.nightAmbient);
+
+    // Add additional point lights around the maze for better visibility
+    this.addMazeLights();
+  }
+
+  addMazeLights() {
+    // Add some evenly spaced point lights throughout the maze for better visibility
+    const mazeWidth = this.mazeSize * this.cellSize;
+    const lightSpacing = mazeWidth / 3; // Create a 3x3 grid of lights
+
+    for (
+      let x = -mazeWidth / 2 + lightSpacing / 2;
+      x <= mazeWidth / 2;
+      x += lightSpacing
+    ) {
+      for (
+        let z = -mazeWidth / 2 + lightSpacing / 2;
+        z <= mazeWidth / 2;
+        z += lightSpacing
+      ) {
+        // Create a dimmed light to provide ambient illumination
+        const light = new THREE.PointLight(0xccccff, 0.4, mazeWidth / 2);
+        light.position.set(x, this.wallHeight + 2, z);
+        light.castShadow = false; // Skip shadow casting for performance
+        this.scene.add(light);
+      }
+    }
   }
 
   addEnvironmentalDetails() {

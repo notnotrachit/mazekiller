@@ -198,6 +198,97 @@ export class Collectibles {
     return noteGroup;
   }
 
+  createSerum(position, id) {
+    // Create a bright, glowing serum/key
+    const serumGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+
+    // Create a bright, emissive material that glows in the dark
+    const serumMaterial = new THREE.MeshStandardMaterial({
+      color: this.getSerumColor(id),
+      emissive: this.getSerumColor(id),
+      emissiveIntensity: 0.8, // Stronger emission
+      metalness: 0.9,
+      roughness: 0.2,
+      transparent: true,
+      opacity: 0.9,
+    });
+
+    const serum = new THREE.Mesh(serumGeometry, serumMaterial);
+    serum.position.copy(position);
+    serum.position.y = 0.5; // Raise it slightly above the ground
+
+    // Add a point light to the serum to make it illuminate surroundings
+    const serumLight = new THREE.PointLight(this.getSerumColor(id), 1.5, 4);
+    serumLight.position.copy(serum.position);
+    this.scene.add(serumLight);
+
+    // Create a glowing halo effect around the serum
+    const glowGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: this.getSerumColor(id),
+      transparent: true,
+      opacity: 0.3,
+      side: THREE.BackSide,
+    });
+
+    const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+    glowMesh.position.copy(serum.position);
+    this.scene.add(glowMesh);
+
+    // Add pulsing animation to make the serum more noticeable
+    this.animateSerum(serum, glowMesh, serumLight);
+
+    this.scene.add(serum);
+
+    return {
+      mesh: serum,
+      light: serumLight,
+      glow: glowMesh,
+      id: id,
+      collected: false,
+    };
+  }
+
+  getSerumColor(id) {
+    // Brighter, more saturated colors for better visibility
+    const colors = [
+      0xff5500, // Bright orange
+      0x00ffff, // Cyan
+      0xff00ff, // Magenta
+      0xffff00, // Yellow
+      0x00ff00, // Bright green
+    ];
+
+    return colors[id % colors.length];
+  }
+
+  animateSerum(serum, glowMesh, light) {
+    // Create a floating and pulsing animation for the serum
+    const startY = serum.position.y;
+    const startTime = Date.now();
+
+    const animate = () => {
+      if (!serum.parent) return; // Stop animation if serum is removed
+
+      const time = Date.now() - startTime;
+
+      // Floating motion
+      serum.position.y = startY + Math.sin(time * 0.002) * 0.2;
+      glowMesh.position.y = serum.position.y;
+      light.position.y = serum.position.y;
+
+      // Pulsing glow
+      const pulseFactor = 0.7 + Math.sin(time * 0.003) * 0.3;
+      glowMesh.scale.set(pulseFactor, pulseFactor, pulseFactor);
+      light.intensity = 1.5 * pulseFactor;
+
+      // Continue animation
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+  }
+
   update(delta, frustum) {
     // Process note collection effects
     this.processNoteCollectionEffects();

@@ -16,6 +16,12 @@ export class GameRenderer {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // Enhance lighting with improved tone mapping and exposure
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 2.2; // Increase exposure for better brightness (was 1.8)
+    this.renderer.outputEncoding = THREE.sRGBEncoding; // Better color representation
+
     document.body.appendChild(this.renderer.domElement);
 
     // Store canvas reference
