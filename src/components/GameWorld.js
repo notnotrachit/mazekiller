@@ -1199,37 +1199,48 @@ export class GameWorld {
     // Perform intensive operations in stages to distribute processing
     // Create a visual collection effect (particle burst)
     if (effect.key && effect.key.position) {
-      // PERFORMANCE OPTIMIZATION: Significantly reduce particle count
-      // Use fewer particles if we have multiple effects queued
-      const particleCount = effect.reducedEffects
-        ? 5
-        : this.collectionEffectsQueue.length > 1
-        ? 8
-        : 12;
+      // Add a flash of light at collection point
+      const flashLight = new THREE.PointLight(0x00aaff, 5, 8);
+      flashLight.position.copy(effect.key.position);
+      flashLight.userData = {
+        creationTime: Date.now(),
+        lifetime: 500, // Short flash lifetime
+        isFlash: true,
+      };
+      this.scene.add(flashLight);
 
+      // Store flash for cleanup
+      if (!this.collectionParticles) this.collectionParticles = [];
+      this.collectionParticles.push(flashLight);
+
+      // Create more particles for a more elaborate effect
+      const particleCount = 20; // Increased particle count for better visual
+
+      // Create main burst particles
       const particleGeometry = new THREE.BufferGeometry();
       const particleMaterial = new THREE.PointsMaterial({
         color: 0x0077ff,
-        size: 0.1,
+        size: 0.15, // Slightly larger particles
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.9,
         blending: THREE.AdditiveBlending,
       });
 
-      // Create particles in a simpler pattern for performance
+      // Create particles in a sphere pattern around collection point
       const particlePositions = new Float32Array(particleCount * 3);
 
-      // Use a simple circular pattern to avoid expensive trig calculations
       for (let i = 0; i < particleCount; i++) {
-        // Simple circular pattern around the collection point
-        const angle = (i / particleCount) * Math.PI * 2;
-        const radius = 0.3;
+        // Distribute particles in a sphere
+        const phi = Math.random() * Math.PI * 2;
+        const theta = Math.random() * Math.PI;
+        const radius = 0.2 + Math.random() * 0.2;
 
         particlePositions[i * 3] =
-          effect.key.position.x + Math.cos(angle) * radius;
-        particlePositions[i * 3 + 1] = effect.key.position.y + 0.3; // Fixed height initially
+          effect.key.position.x + radius * Math.sin(theta) * Math.cos(phi);
+        particlePositions[i * 3 + 1] =
+          effect.key.position.y + radius * Math.sin(theta) * Math.sin(phi);
         particlePositions[i * 3 + 2] =
-          effect.key.position.z + Math.sin(angle) * radius;
+          effect.key.position.z + radius * Math.cos(theta);
       }
 
       particleGeometry.setAttribute(
@@ -1237,51 +1248,235 @@ export class GameWorld {
         new THREE.BufferAttribute(particlePositions, 3)
       );
 
-      // Create the particle system
+      // Create the main particle burst system
       const particles = new THREE.Points(particleGeometry, particleMaterial);
       particles.userData = {
         creationTime: Date.now(),
-        lifetime: 800, // Shorter lifetime for better performance
+        lifetime: 1000, // Longer lifetime for main effect
         velocities: new Float32Array(particleCount * 3), // Pre-calculated velocities
+        type: "burst",
       };
 
-      // Pre-calculate velocities to avoid calculations per frame
+      // Pre-calculate velocities for outward burst
       for (let i = 0; i < particleCount; i++) {
-        particles.userData.velocities[i * 3] = (Math.random() - 0.5) * 0.2; // x velocity
-        particles.userData.velocities[i * 3 + 1] = 0.3 + Math.random() * 0.3; // y velocity (up)
-        particles.userData.velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.2; // z velocity
+        const pos = new THREE.Vector3(
+          particlePositions[i * 3] - effect.key.position.x,
+          particlePositions[i * 3 + 1] - effect.key.position.y,
+          particlePositions[i * 3 + 2] - effect.key.position.z
+        ).normalize();
+
+        // Outward velocity based on position from center
+        const speed = 0.8 + Math.random() * 0.8;
+        particles.userData.velocities[i * 3] = pos.x * speed;
+        particles.userData.velocities[i * 3 + 1] = pos.y * speed + 0.3; // Add upward bias
+        particles.userData.velocities[i * 3 + 2] = pos.z * speed;
       }
 
-      // Add temporary particles to scene
+      // Add main burst particles to scene
       this.scene.add(particles);
-
-      // Store for cleanup
-      if (!this.collectionParticles) this.collectionParticles = [];
       this.collectionParticles.push(particles);
+
+      // Create secondary spiral particles for a more elaborate effect
+      const spiralCount = 15;
+      const spiralGeometry = new THREE.BufferGeometry();
+      const spiralMaterial = new THREE.PointsMaterial({
+        color: 0x00ddff, // Different color for spiral
+        size: 0.1,
+        transparent: true,
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending,
+      });
+
+      const spiralPositions = new Float32Array(spiralCount * 3);
+
+      // Create initial spiral pattern
+      for (let i = 0; i < spiralCount; i++) {
+        const angle = (i / spiralCount) * Math.PI * 2;
+        const radius = 0.3;
+        const height = i * 0.05;
+
+        spiralPositions[i * 3] =
+          effect.key.position.x + Math.cos(angle) * radius;
+        spiralPositions[i * 3 + 1] = effect.key.position.y + height;
+        spiralPositions[i * 3 + 2] =
+          effect.key.position.z + Math.sin(angle) * radius;
+      }
+
+      spiralGeometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(spiralPositions, 3)
+      );
+
+      const spiralParticles = new THREE.Points(spiralGeometry, spiralMaterial);
+      spiralParticles.userData = {
+        creationTime: Date.now(),
+        lifetime: 1200, // Longer lifetime for spiral
+        velocities: new Float32Array(spiralCount * 3),
+        angles: new Float32Array(spiralCount),
+        radii: new Float32Array(spiralCount),
+        type: "spiral",
+      };
+
+      // Set up spiral animation data
+      for (let i = 0; i < spiralCount; i++) {
+        spiralParticles.userData.angles[i] = (i / spiralCount) * Math.PI * 2;
+        spiralParticles.userData.radii[i] = 0.2 + (i / spiralCount) * 0.3;
+        spiralParticles.userData.velocities[i * 3 + 1] =
+          0.2 + Math.random() * 0.2; // Upward velocity
+      }
+
+      // Add spiral particles to scene
+      this.scene.add(spiralParticles);
+      this.collectionParticles.push(spiralParticles);
+
+      // Create a small blue sphere at the collection point that grows and fades
+      const sphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+      const sphereMaterial = new THREE.MeshBasicMaterial({
+        color: 0x0088ff,
+        transparent: true,
+        opacity: 0.7,
+      });
+
+      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      sphere.position.copy(effect.key.position);
+      sphere.userData = {
+        creationTime: Date.now(),
+        lifetime: 800,
+        type: "sphere",
+        initialScale: 0.1,
+        targetScale: 1.5,
+      };
+
+      this.scene.add(sphere);
+      this.collectionParticles.push(sphere);
+
+      // Play a collection sound if soundManager exists
+      if (window.soundManager) {
+        window.soundManager.play("serumCollect");
+      } else if (window.gameInstance && window.gameInstance.soundManager) {
+        window.gameInstance.soundManager.play("serumCollect");
+      }
+
+      // Trigger a UI feedback animation if we have a UI element for serum collection
+      const serumUI = document.getElementById("serum-counter");
+      if (serumUI) {
+        serumUI.classList.add("flash-effect");
+        setTimeout(() => {
+          serumUI.classList.remove("flash-effect");
+        }, 500);
+      }
     }
   }
 
-  // Remove expired particle effects to avoid memory leaks
+  // Updated method to properly clean up all particle effects
   cleanupParticleEffects() {
-    if (!this.particleEffects || this.particleEffects.length === 0) return;
+    if (!this.collectionParticles || this.collectionParticles.length === 0)
+      return;
 
     const now = Date.now();
 
     // Process in reverse order for safe removal during iteration
-    for (let i = this.particleEffects.length - 1; i >= 0; i--) {
-      const particles = this.particleEffects[i];
-      const age = now - particles.userData.creationTime;
+    for (let i = this.collectionParticles.length - 1; i >= 0; i--) {
+      const effect = this.collectionParticles[i];
+      const age = now - effect.userData.creationTime;
 
-      if (age > particles.userData.lifetime) {
-        // Remove expired particles
-        this.scene.remove(particles);
-        particles.geometry.dispose();
-        particles.material.dispose();
-        this.particleEffects.splice(i, 1);
+      if (age > effect.userData.lifetime) {
+        // Remove expired effect
+        this.scene.remove(effect);
+
+        // Proper cleanup based on object type
+        if (effect.geometry) effect.geometry.dispose();
+        if (effect.material) {
+          if (Array.isArray(effect.material)) {
+            effect.material.forEach((mat) => mat.dispose());
+          } else {
+            effect.material.dispose();
+          }
+        }
+
+        this.collectionParticles.splice(i, 1);
       } else {
-        // Update opacity for fading
-        const fade = 1 - age / particles.userData.lifetime;
-        particles.material.opacity = fade * 0.8;
+        // Update effects based on their type
+        const progress = age / effect.userData.lifetime;
+        const fadeOpacity = 1 - progress;
+
+        if (effect.userData.type === "burst") {
+          // Update position of burst particles
+          if (effect.geometry && effect.userData.velocities) {
+            const positions = effect.geometry.attributes.position.array;
+            const velocities = effect.userData.velocities;
+
+            for (let p = 0; p < positions.length / 3; p++) {
+              positions[p * 3] += velocities[p * 3] * 0.016; // Apply velocity
+              positions[p * 3 + 1] += velocities[p * 3 + 1] * 0.016;
+              positions[p * 3 + 2] += velocities[p * 3 + 2] * 0.016;
+
+              // Add gravity effect
+              velocities[p * 3 + 1] -= 0.01;
+            }
+
+            effect.geometry.attributes.position.needsUpdate = true;
+          }
+
+          // Fade out
+          if (effect.material) {
+            effect.material.opacity = fadeOpacity * 0.9;
+            effect.material.size = 0.15 * (1 - progress * 0.5);
+          }
+        } else if (effect.userData.type === "spiral") {
+          // Animate spiral particles
+          if (
+            effect.geometry &&
+            effect.userData.angles &&
+            effect.userData.radii
+          ) {
+            const positions = effect.geometry.attributes.position.array;
+            const velocities = effect.userData.velocities;
+            const angles = effect.userData.angles;
+            const radii = effect.userData.radii;
+
+            for (let p = 0; p < positions.length / 3; p++) {
+              // Update angle for spiral motion
+              angles[p] += 0.1;
+
+              // Expand radius
+              radii[p] += 0.02;
+
+              // Update position
+              const centerX =
+                positions[p * 3] -
+                Math.cos(angles[p] - 0.1) * (radii[p] - 0.02);
+              const centerZ =
+                positions[p * 3 + 2] -
+                Math.sin(angles[p] - 0.1) * (radii[p] - 0.02);
+
+              positions[p * 3] = centerX + Math.cos(angles[p]) * radii[p];
+              positions[p * 3 + 1] += velocities[p * 3 + 1] * 0.016;
+              positions[p * 3 + 2] = centerZ + Math.sin(angles[p]) * radii[p];
+            }
+
+            effect.geometry.attributes.position.needsUpdate = true;
+          }
+
+          // Fade out
+          if (effect.material) {
+            effect.material.opacity = fadeOpacity * 0.7;
+          }
+        } else if (effect.userData.type === "sphere") {
+          // Grow the sphere and fade it out
+          const scaleProgress =
+            effect.userData.initialScale +
+            (effect.userData.targetScale - effect.userData.initialScale) *
+              progress;
+          effect.scale.set(scaleProgress, scaleProgress, scaleProgress);
+
+          if (effect.material) {
+            effect.material.opacity = fadeOpacity * 0.7;
+          }
+        } else if (effect.userData.isFlash) {
+          // Fade out the flash light
+          effect.intensity = 5 * (1 - progress);
+        }
       }
     }
   }
@@ -1304,11 +1499,8 @@ export class GameWorld {
     // Process any queued collection effects (limit per frame)
     this.processCollectionEffects();
 
-    // Use frame counting to distribute intensive operations
-    if (this.frameCount % 3 === 0) {
-      // Clean up particles on a separate frame cycle
-      this.cleanupParticleEffects();
-    }
+    // Update and cleanup particle effects EVERY frame to avoid animation artifacts
+    this.cleanupParticleEffects();
 
     // Animate portal with less frequent updates if far from player
     if (this.portal && this.frameCount % 2 === 0) {
