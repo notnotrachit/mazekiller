@@ -708,87 +708,54 @@
   margin-left: 5px;
 }
 
-/* Health and Stamina Bars */
+/* Health and Stamina Bars - Modern & Futuristic Update */
 .health-bar-container, .stamina-bar-container {
-  border: 1px solid rgba(0, 179, 230, 0.5);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5), inset 0 0 5px rgba(0, 0, 0, 0.5);
-  background-color: rgba(15, 20, 30, 0.6);
-  height: 10px;
-  border-radius: 2px;
-  overflow: hidden;
-  margin: 10px 0;
-  position: relative;
-  width: 200px; /* Set explicit width */
+  position: absolute;
+  left: 20px;
+  width: 220px; /* Slightly wider */
+  height: 18px; /* Slightly taller for better visual */
+  background-color: rgba(10, 20, 30, 0.7); /* Dark, semi-transparent background */
+  border: 1px solid var(--primary-color-low-alpha, rgba(0, 179, 230, 0.3));
+  border-radius: 3px; /* Slightly more rounded */
+  padding: 2px; /* Padding to create inner border effect */
+  box-shadow: 0 0 15px rgba(0, 179, 230, 0.2), inset 0 0 5px rgba(0, 0, 0, 0.5);
+  overflow: hidden; /* Ensure inner bar respects border-radius */
+  z-index: 800;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); /* Angled corners */
 }
 
-/* Position the health and stamina bars in the UI */
 .health-bar-container {
-  position: absolute;
-  bottom: 55px;
-  left: 20px;
-  z-index: 800;
+  bottom: 60px; /* Adjusted positioning */
 }
 
 .stamina-bar-container {
-  position: absolute;
-  bottom: 35px;
-  left: 20px;
-  z-index: 800;
+  bottom: 30px; /* Adjusted positioning */
 }
 
-.health-bar-container:before, .stamina-bar-container:before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 5px,
-    rgba(255, 255, 255, 0.1) 5px,
-    rgba(255, 255, 255, 0.1) 6px
-  );
-  z-index: 1;
-  pointer-events: none;
+.health-bar, .stamina-bar {
+  height: 100%;
+  border-radius: 2px; /* Inner bar rounding */
+  transition: width 0.4s cubic-bezier(0.25, 0.1, 0.25, 1); /* Smoother transition */
+  position: relative;
+  overflow: hidden; /* For pseudo-elements */
 }
 
 .health-bar {
   background: linear-gradient(90deg, #e63946, #ff6b6b);
   box-shadow: 0 0 8px rgba(230, 57, 70, 0.5);
-  height: 100%;
-  transition: width 0.3s cubic-bezier(0.11, 0.65, 0.33, 1);
   position: relative;
   z-index: 2;
-}
-
-.health-bar:after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(255, 255, 255, 0.1) 10px,
-    rgba(255, 255, 255, 0.1) 15px
-  );
 }
 
 .stamina-bar {
-  background: linear-gradient(90deg, #3cb13c, #57cc57);
-  box-shadow: 0 0 8px rgba(60, 177, 60, 0.5);
-  height: 100%;
-  transition: width 0.3s cubic-bezier(0.11, 0.65, 0.33, 1);
+  background: linear-gradient(90deg, #27ae60, #2ecc71);
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
   position: relative;
   z-index: 2;
 }
 
-.stamina-bar:after {
+/* Add common effects to both bars */
+.health-bar:after, .stamina-bar:after {
   content: '';
   position: absolute;
   top: 0;
@@ -802,6 +769,123 @@
     rgba(255, 255, 255, 0.1) 10px,
     rgba(255, 255, 255, 0.1) 15px
   );
+  pointer-events: none;
+}
+
+/* Add segmented futuristic look */
+.health-bar:before, .stamina-bar:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 20px,
+    rgba(255, 255, 255, 0.2) 20px,
+    rgba(255, 255, 255, 0.2) 21px
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Add scanning animation to bars */
+.health-bar-container:after, .stamina-bar-container:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.15),
+    transparent
+  );
+  animation: scanning-effect 2s linear infinite;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Label for bars */
+.health-bar-container:before, .stamina-bar-container:before {
+  position: absolute;
+  left: -50px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-main);
+  font-size: 10px;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px rgba(0, 179, 230, 0.7);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.health-bar-container:before {
+  content: 'HP';
+}
+
+.stamina-bar-container:before {
+  content: 'SP';
+}
+
+/* Digital percentage display */
+.health-bar-container .percentage, .stamina-bar-container .percentage {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-main);
+  font-size: 10px;
+  color: white;
+  text-shadow: 0 0 3px black;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Low health warning effect */
+.health-bar.low {
+  animation: pulse-warning 1s ease-in-out infinite alternate;
+}
+
+/* Stamina recovery indicator */
+.stamina-bar.recovering {
+  animation: recover-pulse 2s ease-in-out infinite;
+}
+
+@keyframes scanning-effect {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(230, 57, 70, 0.5);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 15px rgba(230, 57, 70, 0.8);
+  }
+}
+
+@keyframes recover-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.8);
+  }
 }
 
 /* Crosshair */

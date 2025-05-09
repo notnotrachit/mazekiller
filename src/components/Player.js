@@ -349,6 +349,16 @@ export class Player {
     }
 
     // Handle sprinting and stamina
+    const wasStaminaDepleted = this.stamina < this.maxStamina * 0.3;
+    const isRegenerating =
+      !this.sprint ||
+      !(
+        this.moveForward ||
+        this.moveBackward ||
+        this.moveLeft ||
+        this.moveRight
+      );
+
     if (
       this.sprint &&
       (this.moveForward || this.moveBackward || this.moveLeft || this.moveRight)
@@ -364,14 +374,35 @@ export class Player {
       );
     }
 
+    // Get current stamina percentage
+    const staminaPercentage = (this.stamina / this.maxStamina) * 100;
+    const isStaminaLow = staminaPercentage < 30;
+
     // Optimize UI updates by using a frame counter to reduce DOM operations
     this.frameCount = (this.frameCount || 0) + 1;
     if (this.frameCount % 3 === 0) {
       // Only update UI every 3 frames
-      // Update UI
-      document.querySelector(".stamina-bar").style.width = `${
-        (this.stamina / this.maxStamina) * 100
-      }%`;
+      // Update stamina bar width
+      const staminaBar = document.querySelector(".stamina-bar");
+      if (staminaBar) {
+        staminaBar.style.width = `${staminaPercentage}%`;
+
+        // Add/remove 'recovering' class when stamina is regenerating
+        if (isRegenerating && wasStaminaDepleted) {
+          staminaBar.classList.add("recovering");
+        } else {
+          staminaBar.classList.remove("recovering");
+        }
+      }
+
+      // Update stamina percentage display
+      const staminaPercentageDisplay =
+        document.getElementById("stamina-percentage");
+      if (staminaPercentageDisplay) {
+        staminaPercentageDisplay.textContent = `${Math.floor(
+          staminaPercentage
+        )}%`;
+      }
     }
 
     // Update infection over time
@@ -444,9 +475,27 @@ export class Player {
 
   takeDamage(amount) {
     this.health = Math.max(0, this.health - amount);
-    document.querySelector(".health-bar").style.width = `${
-      (this.health / this.maxHealth) * 100
-    }%`;
+    const healthPercentage = (this.health / this.maxHealth) * 100;
+
+    // Update health bar width
+    document.querySelector(".health-bar").style.width = `${healthPercentage}%`;
+
+    // Update percentage display
+    const healthPercentageDisplay =
+      document.getElementById("health-percentage");
+    if (healthPercentageDisplay) {
+      healthPercentageDisplay.textContent = `${Math.floor(healthPercentage)}%`;
+    }
+
+    // Add low health warning effect when below 30%
+    const healthBar = document.querySelector(".health-bar");
+    if (healthBar) {
+      if (healthPercentage < 30) {
+        healthBar.classList.add("low");
+      } else {
+        healthBar.classList.remove("low");
+      }
+    }
 
     if (this.soundManager) {
       this.soundManager.play("playerHurt");
@@ -463,9 +512,23 @@ export class Player {
 
   heal(amount) {
     this.health = Math.min(this.maxHealth, this.health + amount);
-    document.querySelector(".health-bar").style.width = `${
-      (this.health / this.maxHealth) * 100
-    }%`;
+    const healthPercentage = (this.health / this.maxHealth) * 100;
+
+    // Update health bar width
+    document.querySelector(".health-bar").style.width = `${healthPercentage}%`;
+
+    // Update percentage display
+    const healthPercentageDisplay =
+      document.getElementById("health-percentage");
+    if (healthPercentageDisplay) {
+      healthPercentageDisplay.textContent = `${Math.floor(healthPercentage)}%`;
+    }
+
+    // Remove low health warning if health is above 30%
+    const healthBar = document.querySelector(".health-bar");
+    if (healthBar && healthPercentage >= 30) {
+      healthBar.classList.remove("low");
+    }
   }
 
   reduceInfection(amount) {
@@ -591,8 +654,25 @@ export class Player {
     this.stamina = this.maxStamina;
     this.infection = 0;
 
+    // Reset health bar
     document.querySelector(".health-bar").style.width = "100%";
+    document.querySelector(".health-bar").classList.remove("low");
+    const healthPercentageDisplay =
+      document.getElementById("health-percentage");
+    if (healthPercentageDisplay) {
+      healthPercentageDisplay.textContent = "100%";
+    }
+
+    // Reset stamina bar
     document.querySelector(".stamina-bar").style.width = "100%";
+    document.querySelector(".stamina-bar").classList.remove("recovering");
+    const staminaPercentageDisplay =
+      document.getElementById("stamina-percentage");
+    if (staminaPercentageDisplay) {
+      staminaPercentageDisplay.textContent = "100%";
+    }
+
+    // Reset infection display
     document.getElementById("infection").textContent = "Infection: 0%";
     document.getElementById("infection-overlay").className =
       "infection-overlay";
