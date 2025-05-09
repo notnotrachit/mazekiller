@@ -412,10 +412,10 @@ export class Collectibles {
     if (window.performance && window.performance.now) {
       const currentTime = window.performance.now();
 
-      // If last check was less than 100ms ago and we're not in high-performance mode, skip this check
+      // Increase the time between checks to reduce CPU load (from 100ms to 200ms)
       if (
         this._lastCollisionCheck &&
-        currentTime - this._lastCollisionCheck < 100
+        currentTime - this._lastCollisionCheck < 200
       ) {
         return collisionResults;
       }
@@ -429,8 +429,8 @@ export class Collectibles {
     const playerZ = playerPosition.z;
 
     // Check for collisions with story notes
-    // Only check a limited number of notes per frame
-    const maxNotesToCheck = Math.min(5, this.storyNotes.length);
+    // Further reduce the number of notes to check per frame
+    const maxNotesToCheck = Math.min(3, this.storyNotes.length);
 
     // Start checking from a different index each time to eventually check all notes
     const startIndex = Math.floor(Math.random() * this.storyNotes.length);
@@ -457,31 +457,31 @@ export class Collectibles {
             note.collected = true;
             note.mesh.visible = false;
 
+            // If the note has a light, turn it off immediately
+            if (note.mesh.children) {
+              note.mesh.children.forEach((child) => {
+                if (child instanceof THREE.PointLight) {
+                  child.intensity = 0;
+                }
+              });
+            }
+
             // Store the content for UI
             const content = note.content;
 
-            // Queue collection effect with reduced priority if multiple collections are happening
-            if (this.noteCollectionQueue.length < 2) {
-              this.noteCollectionQueue.push({
-                note: note,
-                time: performance.now(),
-                processed: false,
-              });
-            } else {
-              // If we already have multiple effects in queue, reduce particle count for this one
-              this.noteCollectionQueue.push({
-                note: note,
-                time: performance.now(),
-                processed: false,
-                reducedEffects: true,
-              });
-            }
+            // Queue collection effect with reduced particle count for better performance
+            this.noteCollectionQueue.push({
+              note: note,
+              time: performance.now(),
+              processed: false,
+              reducedEffects: true, // Always use reduced effects for better performance
+            });
 
             // Play sound using a small timeout to avoid performance impact
             if (this.soundManager) {
               setTimeout(() => {
                 this.soundManager.play("note_open");
-              }, 50); // Increased timeout to reduce immediate performance impact
+              }, 100); // Further increased timeout to reduce immediate performance impact
             }
 
             collisionResults.note = content;
@@ -513,12 +513,8 @@ export class Collectibles {
     // Create a simple particle effect at the collection point
     if (effect.note && effect.note.position) {
       // MAJOR PERFORMANCE IMPROVEMENT: Significantly reduce particle count
-      // Use fewer particles if there are multiple effects queued or if this effect was marked for reduction
-      const particleCount = effect.reducedEffects
-        ? 5
-        : this.noteCollectionQueue.length > 1
-        ? 8
-        : 12;
+      // Even fewer particles for better performance
+      const particleCount = 5; // Drastically reduced particle count
 
       const particleGeometry = new THREE.BufferGeometry();
 
@@ -550,9 +546,9 @@ export class Collectibles {
       const particlePositions = new Float32Array(particleCount * 3);
 
       for (let i = 0; i < particleCount; i++) {
-        // Simpler circular pattern with less complex math
+        // Super simple particle positioning for maximum performance
         const angle = (i / particleCount) * Math.PI * 2;
-        const radius = 0.3;
+        const radius = 0.2; // Smaller radius
 
         // Position particles in a circle around the collection point
         particlePositions[i * 3] =
@@ -571,16 +567,16 @@ export class Collectibles {
       const particles = new THREE.Points(particleGeometry, particleMaterial);
       particles.userData = {
         creationTime: Date.now(),
-        lifetime: 800, // Shorter lifetime for better performance
+        lifetime: 600, // Even shorter lifetime for better performance
         initialPositions: particlePositions.slice(), // Store initial positions
         velocities: new Float32Array(particleCount * 3), // Pre-calculate velocities
       };
 
       // Pre-calculate particle velocities to avoid math in update loop
       for (let i = 0; i < particleCount; i++) {
-        particles.userData.velocities[i * 3] = (Math.random() - 0.5) * 0.2; // x velocity
-        particles.userData.velocities[i * 3 + 1] = 0.3 + Math.random() * 0.3; // y velocity (up)
-        particles.userData.velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.2; // z velocity
+        particles.userData.velocities[i * 3] = (Math.random() - 0.5) * 0.1; // x velocity - reduced
+        particles.userData.velocities[i * 3 + 1] = 0.2 + Math.random() * 0.2; // y velocity (up) - reduced
+        particles.userData.velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.1; // z velocity - reduced
       }
 
       // Add temporary particles to scene

@@ -675,7 +675,7 @@ export class Game {
         }
 
         // Update game world (already has internal staggering)
-        this.gameWorld.update(delta);
+        this.gameWorld.update(delta, this.gameState.gamePaused);
 
         // Update collectibles with frustum culling
         try {
@@ -761,6 +761,9 @@ export class Game {
           this.gameWin();
           return;
         }
+      } else {
+        // Even when paused, render a frame to ensure everything stays properly displayed
+        this.gameWorld.update(0, true); // Update with delta 0 and paused=true to maintain visuals without changing state
       }
     }
 

@@ -354,6 +354,9 @@ export class GameWorld {
   }
 
   updateDynamicWalls(delta) {
+    // Don't update if delta is 0 (indicates a paused state)
+    if (delta <= 0) return;
+
     this.dynamicWallsTimer += delta;
 
     // Move dynamic walls at interval
@@ -1482,13 +1485,13 @@ export class GameWorld {
   }
 
   // Update method with optimized performance
-  update(delta) {
+  update(delta, isPaused = false) {
     // Use frame counting to stagger updates across multiple frames
     this.frameCount = (this.frameCount || 0) + 1;
 
     // Animate keys - only update visible keys
-    if (this.frameCount % 2 === 0) {
-      // Only update every other frame
+    if (this.frameCount % 2 === 0 && !isPaused) {
+      // Only update every other frame and when not paused
       this.keys.forEach((key) => {
         if (key.visible) {
           key.rotation.z += delta * 2;
@@ -1503,12 +1506,12 @@ export class GameWorld {
     this.cleanupParticleEffects();
 
     // Animate portal with less frequent updates if far from player
-    if (this.portal && this.frameCount % 2 === 0) {
+    if (this.portal && this.frameCount % 2 === 0 && !isPaused) {
       this.portal.rotation.z += delta * 0.5;
     }
 
     // Animate dynamic walls every 3rd frame to reduce CPU load
-    if (this.frameCount % 3 === 0) {
+    if (this.frameCount % 3 === 0 && !isPaused) {
       const time = performance.now() * 0.001; // Use performance.now for more accurate timing
       this.walls.children.forEach((wall) => {
         if (wall.userData.isDynamic && wall.userData.animate) {
@@ -1518,7 +1521,9 @@ export class GameWorld {
     }
 
     // Update dynamic walls logic - runs on a separate timer not every frame
-    this.updateDynamicWalls(delta);
+    if (!isPaused) {
+      this.updateDynamicWalls(delta);
+    }
   }
 
   shuffleArray(array) {

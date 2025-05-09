@@ -279,15 +279,60 @@ export class UIManager {
     this.noteTitle.textContent = note.title;
     this.noteContent.textContent = note.content;
     this.storyNotePanel.style.display = "flex";
+
+    // Add keyboard listener for X key to close the note
+    this._noteKeyListener = this._handleNoteKeyPress.bind(this);
+    document.addEventListener("keydown", this._noteKeyListener);
+
+    // Add a hint about using X key to close
+    const keyHint = document.createElement("div");
+    keyHint.className = "key-hint";
+    keyHint.textContent = "Press X to close";
+    keyHint.style.position = "absolute";
+    keyHint.style.bottom = "15px";
+    keyHint.style.right = "15px";
+    keyHint.style.fontSize = "0.8rem";
+    keyHint.style.color = "rgba(255, 255, 255, 0.7)";
+    this.storyNotePanel.appendChild(keyHint);
+
     // Add the visible class to properly handle animations and pointer events
     setTimeout(() => {
       this.storyNotePanel.classList.add("visible");
     }, 10); // Small delay to ensure display:flex has taken effect
   }
 
+  // Handle key press events when a note is open
+  _handleNoteKeyPress(event) {
+    // Check if X key is pressed
+    if (event.key === "x" || event.key === "X") {
+      if (this.closeNoteCallback) {
+        this.closeNoteCallback();
+      }
+    }
+  }
+
+  // Add the missing showNoteContent method to fix the error
+  showNoteContent(note) {
+    // This is just an alias for showStoryNote for consistency
+    this.showStoryNote(note);
+  }
+
   // Hide a story note
   hideStoryNote() {
     this.storyNotePanel.classList.remove("visible");
+
+    // Remove keyboard listener
+    if (this._noteKeyListener) {
+      document.removeEventListener("keydown", this._noteKeyListener);
+      this._noteKeyListener = null;
+    }
+
+    // Remove the key hint element if it exists
+    const keyHint = this.storyNotePanel.querySelector(".key-hint");
+    if (keyHint) {
+      this.storyNotePanel.removeChild(keyHint);
+    }
+
     // Remove display style after animation completes
     setTimeout(() => {
       this.storyNotePanel.style.display = "none";

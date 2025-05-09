@@ -53,15 +53,15 @@ export class Player {
     });
 
     this.controls = new PointerLockControls(camera, domElement);
-    scene.add(this.controls.getObject());
+    scene.add(this.controls.object); // Updated: Using .object instead of getObject()
 
     console.log("[DEBUG] Controls object state:", {
       isLocked: this.controls.isLocked,
-      object: this.controls.getObject().position,
+      object: this.controls.object.position, // Updated: Using .object instead of getObject()
     });
 
     // Make sure camera and controls are properly connected
-    const controlsObject = this.controls.getObject();
+    const controlsObject = this.controls.object; // Updated: Using .object instead of getObject()
     console.log("[DEBUG] Controls-Camera connection:", {
       controlsHasCamera: controlsObject.children.includes(camera),
       cameraParent: camera.parent,
@@ -236,12 +236,12 @@ export class Player {
     this.playerModel.castShadow = true;
 
     // Add the player model to the controls object
-    this.controls.getObject().add(this.playerModel);
+    this.controls.object.add(this.playerModel); // Updated: Using .object instead of getObject()
   }
 
   update(delta, checkCollision) {
     // Get the controls object for positioning
-    const controlsObject = this.controls.getObject();
+    const controlsObject = this.controls.object; // Updated: Using .object instead of getObject()
     if (!controlsObject) {
       console.error("[MOVEMENT-DEBUG] Controls object is null");
       return null;
@@ -516,7 +516,7 @@ export class Player {
   }
 
   getPosition() {
-    return this.controls.getObject().position;
+    return this.controls.object.position; // Updated: Using .object instead of getObject()
   }
 
   getDirection() {

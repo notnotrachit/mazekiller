@@ -718,6 +718,22 @@
   overflow: hidden;
   margin: 10px 0;
   position: relative;
+  width: 200px; /* Set explicit width */
+}
+
+/* Position the health and stamina bars in the UI */
+.health-bar-container {
+  position: absolute;
+  bottom: 55px;
+  left: 20px;
+  z-index: 800;
+}
+
+.stamina-bar-container {
+  position: absolute;
+  bottom: 35px;
+  left: 20px;
+  z-index: 800;
 }
 
 .health-bar-container:before, .stamina-bar-container:before {
