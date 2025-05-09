@@ -1,0 +1,163 @@
+/* ui-minimap.css - Styles for minimap and related elements */
+
+/* Minimap Container */
+.minimap-container {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 200px;  /* Increased from 180px to match canvas size */
+  height: 200px; /* Increased from 180px to match canvas size */
+  background-color: rgba(15, 20, 30, 0.7);
+  border: 1px solid rgba(0, 179, 230, 0.4);
+  border-radius: 2px;
+  overflow: visible; /* Keep visible to allow legend to show outside */
+  z-index: 800;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 15px) 0,
+    100% 15px,
+    100% 100%,
+    15px 100%,
+    0 calc(100% - 15px)
+  );
+}
+
+.minimap-container:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: var(--grid-pattern);
+  opacity: 0.1;
+  z-index: 1;
+}
+
+.minimap-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background-color: rgba(0, 179, 230, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-main);
+  font-size: 10px;
+  color: var(--primary-color);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(0, 179, 230, 0.3);
+  z-index: 2;
+}
+
+/* Minimap Canvas */
+.minimap-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Minimap Legend */
+.minimap-legend {
+  position: absolute;
+  top: -125px; /* Move it further up to avoid overlap */
+  right: 0;
+  background-color: rgba(15, 20, 30, 0.9); /* Increased opacity for better readability */
+  border: 1px solid rgba(0, 179, 230, 0.5);
+  border-radius: 3px;
+  padding: 10px;
+  font-family: var(--font-main);
+  font-size: 10px;
+  color: #ffffff; /* Brighter text color */
+  z-index: 801;
+  width: 100%; /* Match width to container */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+  display: block;
+}
+
+.minimap-legend div {
+  display: flex;
+  align-items: center;
+  margin: 3px 0;
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+.minimap-legend span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+  display: inline-block;
+}
+
+/* Legend Colors */
+.minimap-legend .legend-player {
+  background-color: #FFFFFF;
+}
+
+.minimap-legend .legend-griever {
+  background-color: #F44336;
+}
+
+.minimap-legend .legend-serum {
+  background-color: #2196F3;
+}
+
+.minimap-legend .legend-note {
+  background-color: #FFC107;
+}
+
+.minimap-legend .legend-exit {
+  background-color: #4CAF50;
+}
+
+.legend-player, .legend-griever, .legend-serum, .legend-note, .legend-exit {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+  display: inline-block;
+}
+
+/* Minimap Content and Effects */
+.minimap-content {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+.minimap-scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0, 179, 230, 0.1),
+    transparent
+  );
+  pointer-events: none;
+  z-index: 3;
+  animation: scanner 3s linear infinite;
+}
+
+/* Minimap Animation */
+@keyframes scanner {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}

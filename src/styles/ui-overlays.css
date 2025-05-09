@@ -1,0 +1,180 @@
+/* ui-overlays.css - Styles for fullscreen overlays and effects */
+
+/* Infection Overlay */
+.infection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 82, 82, 0.1);
+  pointer-events: none;
+  z-index: 800;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.infection-overlay.active {
+  opacity: 1;
+  animation: heartbeat 2s infinite;
+}
+
+.infection-overlay:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-shadow: inset 0 0 100px rgba(255, 82, 82, 0.3);
+  z-index: 801;
+}
+
+.infection-overlay.mild {
+  background-color: rgba(255, 82, 82, 0.05);
+}
+
+.infection-overlay.moderate {
+  background-color: rgba(255, 82, 82, 0.15);
+}
+
+.infection-overlay.severe {
+  background-color: rgba(255, 82, 82, 0.25);
+  animation: heartbeat 1.5s infinite;
+}
+
+.infection-overlay.critical {
+  background-color: rgba(255, 82, 82, 0.35);
+  animation: heartbeat 1s infinite;
+}
+
+.infection-veins {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 30% 20%, transparent 0%, rgba(255, 82, 82, 0.1) 100%),
+    radial-gradient(circle at 70% 80%, transparent 0%, rgba(255, 82, 82, 0.1) 100%);
+  opacity: 0.7;
+  z-index: 802;
+  mix-blend-mode: overlay;
+}
+
+/* Time Warning Overlay */
+.time-warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 183, 3, 0);
+  pointer-events: none;
+  z-index: 799; /* Behind infection overlay */
+  transition: background-color 0.5s ease;
+}
+
+.time-warning-overlay.active {
+  animation: time-warning 1s infinite alternate;
+}
+
+/* Critical and severe flicker effects */
+.critical-flicker {
+  animation: critical-flicker 0.5s infinite alternate;
+}
+
+.severe-flicker {
+  animation: severe-flicker 0.8s infinite alternate;
+}
+
+/* Overlay Animations */
+@keyframes heartbeat {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes time-warning {
+  0%, 100% {
+    background-color: rgba(255, 183, 3, 0);
+  }
+  50% {
+    background-color: rgba(255, 183, 3, 0.2);
+  }
+}
+
+@keyframes critical-flicker {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes severe-flicker {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes serum-glow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(46, 204, 113, 0.7);
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(46, 204, 113, 0.9);
+  }
+}
+
+@keyframes time-warning {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(255, 183, 3, 0.7);
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(255, 183, 3, 0.9);
+  }
+}
+
+@keyframes digital-flicker {
+  0%, 100% {
+    opacity: 1;
+    text-shadow: 0 0 5px rgba(0, 179, 230, 0.7);
+  }
+  90% {
+    opacity: 1;
+    text-shadow: 0 0 5px rgba(0, 179, 230, 0.7);
+  }
+  91% {
+    opacity: 0.8;
+    text-shadow: none;
+  }
+  93% {
+    opacity: 1;
+    text-shadow: 0 0 5px rgba(0, 179, 230, 0.7);
+  }
+  94% {
+    opacity: 0.9;
+    text-shadow: none;
+  }
+  96% {
+    opacity: 1;
+    text-shadow: 0 0 5px rgba(0, 179, 230, 0.7);
+  }
+}
+
+@keyframes voiceWave {
+  0%, 100% {
+    height: 5px;
+  }
+  50% {
+    height: 15px;
+  }
+}

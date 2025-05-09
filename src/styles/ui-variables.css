@@ -1,0 +1,31 @@
+/* ui-variables.css - Contains CSS variables for UI components */
+
+/* Root Variables - Enhanced for futuristic theme */
+:root {
+  --tech-grid-color: rgba(0, 179, 230, 0.1);
+  --hologram-glow: 0 0 15px rgba(0, 179, 230, 0.7);
+  --data-line: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+  --circuit-pattern: repeating-linear-gradient(
+    0deg,
+    var(--tech-grid-color) 0px,
+    var(--tech-grid-color) 1px,
+    transparent 1px,
+    transparent 15px
+  );
+  --tech-corner-size: 8px;
+  --wckd-data-line: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.7), transparent);
+  --grid-pattern: repeating-linear-gradient(
+    0deg,
+    var(--grid-color) 0px,
+    var(--grid-color) 1px,
+    transparent 1px,
+    transparent 50px
+  ),
+  repeating-linear-gradient(
+    90deg,
+    var(--grid-color) 0px,
+    var(--grid-color) 1px,
+    transparent 1px,
+    transparent 50px
+  );
+}
