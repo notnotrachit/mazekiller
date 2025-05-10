@@ -168,9 +168,17 @@ export class GameState {
 
   // Cycle to the next objective
   cycleObjective() {
-    this.state.currentObjective =
-      (this.state.currentObjective + 1) % this.state.objectives.length;
+    // If player hasn't collected all serums yet, stick with the first objective
+    if (this.state.serumCollected < this.state.totalSerum) {
+      this.state.currentObjective = 0; // "Find serum vials to slow the infection"
+    } else {
+      // If all serums are collected, show the "Find the exit" objective
+      this.state.currentObjective = 2; // "Find the exit before time runs out"
+    }
+
+    // Reset the objective timer
     this.state.objectiveTimer = 0;
+
     return this.currentObjectiveText;
   }
 

@@ -68,7 +68,7 @@ export class Game {
     await this.renderer.initialize();
 
     // Initialize UI
-    this.ui = new UIManager(this.gameState);
+    this.ui = new UIManager(this.gameState, this.soundManager);
 
     // Initialize minimap
     this.minimap = new Minimap();
@@ -541,7 +541,11 @@ export class Game {
     this.player.unlock();
 
     if (this.soundManager) {
-      this.soundManager.playMusic("gameOver");
+      this.soundManager.play("gameOver");
+      // Stop any music playing
+      Object.keys(this.soundManager.music).forEach((key) => {
+        this.soundManager.music[key].stop();
+      });
     }
 
     // Show the game over screen

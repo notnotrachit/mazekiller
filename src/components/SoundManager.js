@@ -140,8 +140,8 @@ export class SoundManager {
     // Define all sounds with error handling
     const soundDefinitions = {
       // UI Sounds
-      click: { url: "assets/sounds/click.mp3", volume: 0.5 },
-      hover: { url: "assets/sounds/hover.mp3", volume: 0.3 },
+      click: { url: "assets/sounds/click.mp3", volume: 0.8 },
+      hover: { url: "assets/sounds/hover.mp3", volume: 0.8 },
 
       // Player Sounds
       footsteps: { url: "assets/sounds/footstep.mp3", volume: 0.4, loop: true },
@@ -171,7 +171,7 @@ export class SoundManager {
       playerHurt: { url: "assets/sounds/hurt.mp3", volume: 0.6 },
 
       // Game State Sounds
-      gameOver: { url: "assets/sounds/game_over.mp3", volume: 0.7 },
+      gameOver: { url: "assets/sfx/death.mp3", volume: 0.7 },
       victory: { url: "assets/sounds/victory.mp3", volume: 0.8 },
       heartbeat: {
         url: "assets/sounds/heartbeat.mp3",

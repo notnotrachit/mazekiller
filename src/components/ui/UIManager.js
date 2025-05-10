@@ -2,8 +2,9 @@
 // Handles all UI elements and interactions
 
 export class UIManager {
-  constructor(gameState) {
+  constructor(gameState, soundManager = null) {
     this.gameState = gameState;
+    this.soundManager = soundManager; // Store reference to sound manager
 
     // DOM elements
     this.loadingScreen = document.querySelector(".loading-screen");
@@ -64,9 +65,18 @@ export class UIManager {
     this.resumeCallback = callbacks.onResume;
     this.closeNoteCallback = callbacks.onCloseNote;
 
+    // Helper function to play click sound
+    const playClickSound = () => {
+      if (this.soundManager) {
+        this.soundManager.play("click");
+      }
+    };
+
     // Set click handlers for difficulty buttons
     this.difficultyBtns.forEach((btn) => {
       btn.addEventListener("click", () => {
+        playClickSound(); // Play click sound
+
         // Remove active class from all buttons
         this.difficultyBtns.forEach((b) => b.classList.remove("active"));
 
@@ -80,27 +90,32 @@ export class UIManager {
 
     // Start game button
     this.startGameBtn.addEventListener("click", () => {
+      playClickSound(); // Play click sound
       if (this.startCallback) this.startCallback();
     });
 
     // Restart buttons
     this.restartBtn.addEventListener("click", () => {
+      playClickSound(); // Play click sound
       // Refresh the page instead of calling restart callback
       window.location.reload();
     });
 
     this.restartFromPauseBtn.addEventListener("click", () => {
+      playClickSound(); // Play click sound
       // Refresh the page instead of calling restart callback
       window.location.reload();
     });
 
     this.playAgainBtn.addEventListener("click", () => {
+      playClickSound(); // Play click sound
       // Refresh the page instead of calling restart callback
       window.location.reload();
     });
 
     // Resume button with special handling
     this.resumeBtn.addEventListener("click", (event) => {
+      playClickSound(); // Play click sound
       event.preventDefault();
 
       // Hide pause menu immediately
@@ -115,6 +130,7 @@ export class UIManager {
 
     // Close note button
     this.closeNoteBtn.addEventListener("click", () => {
+      playClickSound(); // Play click sound
       if (this.closeNoteCallback) this.closeNoteCallback();
     });
   }

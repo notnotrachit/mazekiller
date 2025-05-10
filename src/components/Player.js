@@ -505,6 +505,10 @@ export class Player {
     this.shakeCamera(0.5, 0.5);
 
     if (this.health <= 0) {
+      // Play death sound when health reaches zero
+      if (this.soundManager) {
+        this.soundManager.play("death");
+      }
       return true; // Player died
     }
     return false;
