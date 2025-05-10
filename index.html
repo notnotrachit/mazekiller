@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Maze</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-c2g5Rg4d.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B6EaiRDY.css">
+  </head>
+  <body>
+    <div id="app">
+      <!-- Loading Screen -->
+      <div class="loading-screen" id="loading-screen">
+        <div class="loading-content">
+          <h1>LOADING SIMULATION</h1>
+          <div class="loading-bar-container">
+            <div class="loading-bar" id="loading-bar"></div>
+          </div>
+          <div class="loading-text" id="loading-text">Initializing assets...</div>
+        </div>
+        <div class="wckd-logo">W.C.K.D</div>
+      </div>
+
+      <!-- Cinematic Intro Sequence -->
+      <div class="cinematic-container" id="cinematic-container">
+        <div class="cinematic-background" id="cinematic-background"></div>
+        <div class="cinematic-content">
+          <div class="character-portrait" id="character-portrait"></div>
+          <h2 class="cinematic-title" id="cinematic-title"></h2>
+          <h3 class="cinematic-subtitle" id="cinematic-subtitle"></h3>
+          <p class="cinematic-text" id="cinematic-text"></p>
+          <div class="cinematic-voice-indicator">
+            <div class="voice-waves">
+              <div class="voice-wave"></div>
+              <div class="voice-wave"></div>
+              <div class="voice-wave"></div>
+              <div class="voice-wave"></div>
+            </div>
+            <span class="voice-name" id="voice-name">WCKD AI</span>
+          </div>
+        </div>
+        <button class="cinematic-skip" id="cinematic-skip">Skip [Space]</button>
+        <div class="cinematic-progress" id="cinematic-progress"></div>
+      </div>
+      
+      <div class="memory-flashback" id="memory-flashback"></div>
+
+      <!-- Intro Screen with Story -->
+      <div class="intro-screen" id="intro-screen">
+        <div class="intro-content">
+          <div class="glitch-effect" data-text="MAZE TRIALS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;">MAZE TRIALS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+          <div class="wckd-subtitle">WCKD Trial Simulation v2.5</div>
+          <div class="story-text">
+            <p>You wake up in a <span class="highlight">maze</span>, disoriented and with fractured memories. Your head pounds as the W.C.K.D implant at the base of your skull pulses with activity.</p>
+            <p>The <span class="serum-text">Serum</span> in your system is fading - you can feel it. Without it, the <span class="danger-text">infection</span> will take hold, and your mind will succumb to the <span class="danger-text">Flare virus</span>.</p>
+            <p>There's only one way out - find the remaining <span class="serum-text">Serum</span> vials scattered throughout the maze to stabilize your condition, and locate the <span class="highlight">exit</span> before the <span class="warning-text">Grievers</span> find you.</p>
+            <p>But be careful - the maze is not what it seems. Your own memories might be the key to understanding why you're here... if you can trust them.</p>
+          </div>
+          <div class="difficulty-selection">
+            <button class="difficulty-btn active" id="normal-difficulty">Normal</button>
+            <button class="difficulty-btn" id="hard-difficulty">Hard</button>
+          </div>
+          <button class="pulse-btn" id="start-game">ENTER THE MAZE</button>
+        </div>
+      </div>
+
+      <!-- Game UI -->
+      <div class="game-ui" id="game-ui">
+        <div class="top-left">
+          <div id="timer">Time: 10:00</div>
+          <div id="serum-count">Serum: 0/5</div>
+          <div id="infection">Infection: 0%</div>
+        </div>
+        <div class="top-right">
+          <div id="objective">Find Serum and Exit</div>
+        </div>
+        <div class="health-bar-container">
+          <div class="health-bar" id="health-bar"></div>
+          <div class="percentage" id="health-percentage">100%</div>
+        </div>
+        <div class="stamina-bar-container">
+          <div class="stamina-bar" id="stamina-bar"></div>
+          <div class="percentage" id="stamina-percentage">100%</div>
+        </div>
+        <div class="crosshair" id="crosshair">+</div>
+        <div class="instructions" id="instructions">W,A,S,D to move | SHIFT to run | SPACE to jump | E to interact | ESC for menu</div>
+      </div>
+
+      <!-- Minimap -->
+      <div class="minimap-container" id="minimap-container">
+        <canvas id="minimap-canvas" class="minimap-canvas"></canvas>
+        <div class="minimap-legend">
+          <div><span class="legend-player"></span> You</div>
+          <div><span class="legend-griever"></span> Griever</div>
+          <div><span class="legend-serum"></span> Serum</div>
+          <div><span class="legend-note"></span> Note</div>
+          <div><span class="legend-exit"></span> Exit</div>
+        </div>
+      </div>
+
+      <!-- Game Over Screen -->
+      <div class="game-over" id="game-over">
+        <h2>SIMULATION TERMINATED</h2>
+        <p>The infection has taken over. Your mind has succumbed to the Flare.</p>
+        <button id="restart">RESTART SIMULATION</button>
+      </div>
+
+      <!-- Win Screen -->
+      <div class="win-screen" id="win-screen">
+        <h2>SIMULATION COMPLETE</h2>
+        <p>You've successfully navigated the maze and controlled the infection.</p>
+        <button id="play-again">PLAY AGAIN</button>
+      </div>
+
+      <!-- Pause Menu -->
+      <div class="pause-menu" id="pause-menu">
+        <h2>PAUSED</h2>
+        <button id="resume">RESUME</button>
+        <button id="restart-from-pause">RESTART</button>
+        <!-- <button id="settings">SETTINGS</button> -->
+        <div class="controls-info">
+          <h3>CONTROLS</h3>
+          <p>W, A, S, D - Movement</p>
+          <p>SHIFT - Sprint</p>
+          <p>SPACE - Jump</p>
+          <p>E - Interact</p>
+          <p>ESC - Pause/Menu</p>
+          <p>M - Toggle Minimap (if unlocked)</p>
+        </div>
+      </div>
+
+      <!-- Interaction Prompt -->
+      <div class="interaction-prompt" id="interaction-prompt">
+        Press E to interact
+      </div>
+
+      <!-- Story Note Display -->
+      <div class="story-note" id="story-note">
+        <div class="note-content" id="note-content">
+          <h3 id="note-title">Memory Fragment</h3>
+          <p id="note-text">...</p>
+          <button class="close-note" id="close-note">Close</button>
+        </div>
+      </div>
+
+      <!-- Objective Notification -->
+      <div class="objective-notification" id="objective-notification"></div>
+
+      <!-- Infection/Warning Overlays -->
+      <div class="infection-overlay" id="infection-overlay"></div>
+      <div class="time-warning-overlay" id="time-warning-overlay"></div>
+      <div class="cheat-notification" id="cheat-notification" style="display: none;"></div>
+      
+      <!-- FPS Counter -->
+      <div class="fps-counter hidden" id="fps-counter">FPS: 0</div>
+    </div>
+  </body>
+</html>
