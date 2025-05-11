@@ -325,7 +325,7 @@ export class SoundManager {
       error: { url: "assets/sfx/error.mp3", volume: 0.5 },
       menu_open: { url: "assets/sfx/menu_open.mp3", volume: 0.5 },
       menu_close: { url: "assets/sfx/menu_close.mp3", volume: 0.5 },
-      button: { url: "assets/sfx/button.mp3", volume: 0.5 },
+      button: { url: "assets/sound/click.mp3", volume: 0.5 },
       note_open: { url: "assets/sfx/note_open.mp3", volume: 0.5 },
       note_close: { url: "assets/sfx/note_close.mp3", volume: 0.5 },
       griever_nearby: { url: "assets/sfx/griever_nearby.mp3", volume: 0.7 },
